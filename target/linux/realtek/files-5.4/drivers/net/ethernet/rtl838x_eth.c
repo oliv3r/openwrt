@@ -1928,6 +1928,7 @@ static const struct net_device_ops rtl838x_eth_netdev_ops = {
 	.ndo_tx_timeout = rtl838x_eth_tx_timeout,
 	.ndo_set_features = rtl83xx_set_features,
 	.ndo_fix_features = rtl838x_fix_features,
+	.ndo_setup_tc = rtl83xx_setup_tc,
 };
 
 static const struct net_device_ops rtl839x_eth_netdev_ops = {
@@ -1941,6 +1942,7 @@ static const struct net_device_ops rtl839x_eth_netdev_ops = {
 	.ndo_tx_timeout = rtl838x_eth_tx_timeout,
 	.ndo_set_features = rtl83xx_set_features,
 	.ndo_fix_features = rtl838x_fix_features,
+	.ndo_setup_tc = rtl83xx_setup_tc,
 };
 
 static const struct net_device_ops rtl930x_eth_netdev_ops = {
@@ -1954,6 +1956,7 @@ static const struct net_device_ops rtl930x_eth_netdev_ops = {
 	.ndo_tx_timeout = rtl838x_eth_tx_timeout,
 	.ndo_set_features = rtl93xx_set_features,
 	.ndo_fix_features = rtl838x_fix_features,
+	.ndo_setup_tc = rtl83xx_setup_tc,
 };
 
 static const struct net_device_ops rtl931x_eth_netdev_ops = {
