@@ -2,6 +2,11 @@
 
 #include <linux/of_mdio.h>
 #include <linux/of_platform.h>
+#include <net/arp.h>
+#include <net/nexthop.h>
+#include <net/neighbour.h>
+#include <net/netevent.h>
+#include <linux/inetdevice.h>
 
 #include <asm/mach-rtl838x/mach-rtl83xx.h>
 #include "rtl83xx.h"
@@ -302,41 +307,36 @@ static int __init rtl83xx_mdio_probe(struct rtl838x_switch_priv *priv)
 		if (of_property_read_u32(dn, "reg", &pn))
 			continue;
 
-		priv->ports[pn].dp = dsa_to_port(priv->ds, pn);
+		if (of_property_read_bool(dn, "phy-is-integrated"))
+			priv->ports[pn].phy_is_integrated = true;
 
 		// Check for the integrated SerDes of the RTL8380M first
-		if (of_property_read_bool(dn, "phy-is-integrated")
-			&& priv->id == 0x8380 && pn >= 24) {
+		if (priv->ports[pn].phy_is_integrated && priv->id == 0x8380 && pn >= 24) {
 			pr_debug("----> FÓUND A SERDES\n");
 			priv->ports[pn].phy = PHY_RTL838X_SDS;
 			continue;
 		}
 
-		if (of_property_read_bool(dn, "phy-is-integrated")
-			&& !of_property_read_bool(dn, "sfp")) {
+		if (priv->ports[pn].phy_is_integrated && !of_property_read_bool(dn, "sfp")) {
 			priv->ports[pn].phy = PHY_RTL8218B_INT;
 			continue;
 		}
 
-		if (!of_property_read_bool(dn, "phy-is-integrated")
-			&& of_property_read_bool(dn, "sfp")) {
+		if (!priv->ports[pn].phy_is_integrated && of_property_read_bool(dn, "sfp")) {
 			priv->ports[pn].phy = PHY_RTL8214FC;
 			continue;
 		}
 
-		if (!of_property_read_bool(dn, "phy-is-integrated")
-			&& !of_property_read_bool(dn, "sfp")) {
+		if (!priv->ports[pn].phy_is_integrated && !of_property_read_bool(dn, "sfp")) {
 			priv->ports[pn].phy = PHY_RTL8218B_EXT;
 			continue;
 		}
 	}
 
-	// TODO: Do this needs to come from the .dts, at least the SerDes number
+	// TODO: Do this needs to come from the .dts
 	if (priv->family_id == RTL9300_FAMILY_ID) {
 		priv->ports[24].is2G5 = true;
 		priv->ports[25].is2G5 = true;
-		priv->ports[24].sds_num = 1;
-		priv->ports[24].sds_num = 2;
 	}
 
 	/* Disable MAC polling the PHY so that we can start configuration */
@@ -346,25 +346,18 @@ static int __init rtl83xx_mdio_probe(struct rtl838x_switch_priv *priv)
 	if (priv->family_id == RTL8380_FAMILY_ID) {
 		/* Enable SerDes NWAY and PHY control via SoC */
 		sw_w32_mask(BIT(7), BIT(15), RTL838X_SMI_GLB_CTRL);
-	} else {
+	} else if (priv->family_id == RTL8390_FAMILY_ID) {
 		/* Disable PHY polling via SoC */
 		sw_w32_mask(BIT(7), 0, RTL839X_SMI_GLB_CTRL);
 	}
 
-	/* Power on fibre ports and reset them if necessary */
+	/* Power on fibre ports and reset them if necessary
+	 * TODO: Put this in rtl83xx_phylink_mac_config ? see rtl93xx_phylink_mac_config
+	 */
 	if (priv->ports[24].phy == PHY_RTL838X_SDS) {
 		pr_debug("Powering on fibre ports & reset\n");
 		rtl8380_sds_power(24, 1);
 		rtl8380_sds_power(26, 1);
-	}
-
-	// TODO: Only power on SerDes with external PHYs connected
-	if (priv->family_id == RTL9300_FAMILY_ID) {
-		pr_info("RTL9300 Powering on SerDes ports\n");
-		rtl9300_sds_power(24, 1);
-		rtl9300_sds_power(25, 1);
-		rtl9300_sds_power(26, 1);
-		rtl9300_sds_power(27, 1);
 	}
 
 	pr_debug("%s done\n", __func__);
