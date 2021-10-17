@@ -6,6 +6,8 @@
 #include <asm/mach-rtl838x/mach-rtl83xx.h>
 #include "rtl83xx.h"
 
+/* Maximum size of a switched packet without Ethernet overhead */
+#define MAX_SWITCHED_PACKET_SIZE 9972
 
 extern struct rtl83xx_soc_info soc_info;
 
@@ -1729,6 +1731,46 @@ int dsa_phy_write(struct dsa_switch *ds, int phy_addr, int phy_reg, u16 val)
 	return write_phy(phy_addr, 0, phy_reg, val);
 }
 
+static int rtl83xx_get_max_mtu(struct dsa_switch *ds, int port)
+{
+	pr_info("In %s for port %d\n", __func__, port);
+
+	return MAX_SWITCHED_PACKET_SIZE;
+}
+
+static int rtl83xx_port_change_mtu(struct dsa_switch *ds, int port, int mtu)
+{
+	struct rtl838x_switch_priv *priv = ds->priv;
+
+	pr_info("In %s, change MTU of port %d to %d\n", __func__, port, mtu);
+	if (mtu > MAX_SWITCHED_PACKET_SIZE)
+		return MAX_SWITCHED_PACKET_SIZE;
+
+	switch (priv->family_id) {
+	case RTL8380_FAMILY_ID:
+		sw_w32(mtu << 14 | mtu, RTL838X_MAC_MAX_LEN_CTRL);
+		break;
+
+	case RTL8390_FAMILY_ID:
+		sw_w32(mtu << 14 | mtu, RTL839X_MAC_MAX_LEN_CTRL);
+		break;
+
+	case RTL9300_FAMILY_ID:
+		sw_w32(mtu << 14 | mtu, RTL930X_MAC_L2_PORT_MAX_LEN_CTRL + (port << 6));
+		break;
+
+	case RTL9310_FAMILY_ID:
+		if (port < priv->cpu_port)
+			sw_w32(mtu << 14 | mtu, RTL930X_MAC_L2_PORT_MAX_LEN_CTRL + (port << 2));
+		break;
+	default:
+		pr_err("%s: SoC not supported\n", __func__);
+		return -EOPNOTSUPP;
+	}
+
+	return 0;
+}
+
 const struct dsa_switch_ops rtl83xx_switch_ops = {
 	.get_tag_protocol	= rtl83xx_get_tag_protocol,
 	.setup			= rtl83xx_setup,
@@ -1773,6 +1815,9 @@ const struct dsa_switch_ops rtl83xx_switch_ops = {
 
 	.port_mirror_add	= rtl83xx_port_mirror_add,
 	.port_mirror_del	= rtl83xx_port_mirror_del,
+
+	.port_max_mtu		= rtl83xx_get_max_mtu,
+	.port_change_mtu	= rtl83xx_port_change_mtu,
 };
 
 const struct dsa_switch_ops rtl930x_switch_ops = {
@@ -1816,5 +1861,8 @@ const struct dsa_switch_ops rtl930x_switch_ops = {
 	.port_mdb_prepare	= rtl83xx_port_mdb_prepare,
 	.port_mdb_add		= rtl83xx_port_mdb_add,
 	.port_mdb_del		= rtl83xx_port_mdb_del,
+
+	.port_max_mtu		= rtl83xx_get_max_mtu,
+	.port_change_mtu	= rtl83xx_port_change_mtu,
 
 };

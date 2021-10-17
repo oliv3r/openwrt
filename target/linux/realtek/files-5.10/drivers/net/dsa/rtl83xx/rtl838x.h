@@ -146,6 +146,11 @@
 #define RTL931X_MAC_RX_PAUSE_STS		(0x0F00)
 #define RTL930X_MAC_LINK_MEDIA_STS		(0xCB14)
 
+#define RTL838X_MAC_MAX_LEN_CTRL		(0xa9e0)
+#define RTL839X_MAC_MAX_LEN_CTRL		(0x02B0)
+#define RTL930X_MAC_L2_PORT_MAX_LEN_CTRL	(0x326c)
+#define RTL931X_MAC_L2_PORT_MAX_LEN_CTRL	(0x5554)
+
 /* MAC link state bits */
 #define FORCE_EN				(1 << 0)
 #define FORCE_LINK_EN				(1 << 1)

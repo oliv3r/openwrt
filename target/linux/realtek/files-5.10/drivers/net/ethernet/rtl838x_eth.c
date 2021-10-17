@@ -737,6 +737,9 @@ static void rtl838x_hw_en_rxtx(struct rtl838x_eth_priv *priv)
 
 	/* Enable CRC checks on CPU-port */
 	sw_w32_mask(0, BIT(3), priv->r->mac_port_ctrl(priv->cpu_port));
+
+	/* Set TX packet size limit */
+	sw_w32(RING_BUFFER - 4, RTL838X_DMA_IF_PKT_TX_FLTR_CTRL);
 }
 
 static void rtl839x_hw_en_rxtx(struct rtl838x_eth_priv *priv)
@@ -761,6 +764,9 @@ static void rtl839x_hw_en_rxtx(struct rtl838x_eth_priv *priv)
 
 	/* Force CPU port link up */
 	sw_w32_mask(0, 3, priv->r->mac_force_mode_ctrl + priv->cpu_port * 4);
+
+	/* Set TX and RX packet size limits */
+	sw_w32((RING_BUFFER - 4) << 14 | (RING_BUFFER - 4), RTL839X_DMA_IF_PKT_FLTR_CTRL);
 }
 
 static void rtl93xx_hw_en_rxtx(struct rtl838x_eth_priv *priv)
@@ -791,8 +797,20 @@ static void rtl93xx_hw_en_rxtx(struct rtl838x_eth_priv *priv)
 	/* Restart TX/RX to CPU port, enable CRC checking */
 	sw_w32_mask(0x0, 0x3 | BIT(4), priv->r->mac_port_ctrl(priv->cpu_port));
 
-	sw_w32_mask(0, BIT(priv->cpu_port), RTL930X_L2_UNKN_UC_FLD_PMSK);
-	sw_w32(0x217, priv->r->mac_force_mode_ctrl + priv->cpu_port * 4);
+
+	if (priv->family_id == RTL9300_FAMILY_ID) {
+		sw_w32_mask(0, BIT(priv->cpu_port), RTL930X_L2_UNKN_UC_FLD_PMSK);
+		sw_w32(0x217, priv->r->mac_force_mode_ctrl + priv->cpu_port * 4);
+
+		/* Set TX packet size limit */
+		sw_w32(RING_BUFFER - 4, RTL930X_MAC_L2_CPU_MAX_LEN_CTRL);
+	} else {
+		sw_w32(0x2a1d, priv->r->mac_force_mode_ctrl + priv->cpu_port * 4);
+		sw_w32_mask(0, BIT(priv->cpu_port), RTL931X_L2_UNKN_UC_FLD_PMSK);
+
+		/* Set TX/RX packet size limit */
+		sw_w32(0x3000 << 14 | (RING_BUFFER - 4), RTL931X_MAC_L2_CPU_MAX_LEN_CTRL);
+	}
 }
 
 static void rtl838x_setup_ring_buffer(struct rtl838x_eth_priv *priv, struct ring_b *ring)
