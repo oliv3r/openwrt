@@ -112,6 +112,14 @@ define Device/netgear_gs310tp-v1
 endef
 TARGET_DEVICES += netgear_gs310tp-v1
 
+define Device/ubiquiti_usw-aggregation
+  SOC := rtl9303
+  IMAGE_SIZE := 13504k
+  DEVICE_VENDOR := Ubiquiti
+  DEVICE_MODEL := USW-Aggregation
+endef 
+TARGET_DEVICES += ubiquiti_usw-aggregation
+
 define Device/zyxel_gs1900
   SOC := rtl8380
   IMAGE_SIZE := 6976k
