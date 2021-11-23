@@ -48,7 +48,7 @@
 #define RTL838X_MAC_FORCE_MODE_CTRL		(0xa104)
 #define RTL839X_MAC_FORCE_MODE_CTRL		(0x02bc)
 #define RTL930X_MAC_FORCE_MODE_CTRL		(0xCA1C)
-#define RTL931X_MAC_FORCE_MODE_CTRL		(0x0ddc)
+#define RTL931X_MAC_FORCE_MODE_CTRL		(0x0dcc)
 
 /* MAC address settings */
 #define RTL838X_MAC				(0xa9ec)
@@ -96,6 +96,12 @@
 #define RTL838X_SDS4_DUMMY0			(0xef8c)
 #define RTL838X_SDS5_EXT_REG6			(0xf18c)
 
+#define RTL838X_DMA_IF_PKT_TX_FLTR_CTRL		(0xAA6C)
+#define RTL839X_DMA_IF_PKT_FLTR_CTRL		(0x1000)
+#define RTL931X_MAC_L2_CPU_MAX_LEN_CTRL		(0x1368)
+#define RTL930X_MAC_L2_CPU_MAX_LEN_CTRL		(0xa3a0)
+#define RTL838X_MAC_MAX_LEN_CTRL		(0xA9E0)
+
 /* L2 features */
 #define RTL839X_TBL_ACCESS_L2_CTRL		(0x1180)
 #define RTL839X_TBL_ACCESS_L2_DATA(idx)		(0x1184 + ((idx) << 2))
@@ -134,6 +140,7 @@
 #define RTL838X_EEE_TX_TIMER_GELITE_CTRL	(0xaa08)
 
 #define RTL930X_L2_UNKN_UC_FLD_PMSK		(0x9064)
+#define RTL931X_L2_UNKN_UC_FLD_PMSK		(0xC8F4)
 
 #define RTL839X_MAC_GLB_CTRL			(0x02a8)
 #define RTL839X_SCHED_LB_TICK_TKN_CTRL		(0x60f8)
@@ -182,9 +189,12 @@
 #define RTL930X_RMA_CTRL_1			(0x9E64)
 #define RTL930X_RMA_CTRL_2			(0x9E68)
 
+#define RTL931X_VLAN_APP_PKT_CTRL		(0x96b0)
 #define RTL931X_RMA_CTRL_0			(0x8800)
 #define RTL931X_RMA_CTRL_1			(0x8804)
 #define RTL931X_RMA_CTRL_2			(0x8808)
+#define RTL931X_RMA_USR_DEF_CTRL		(0x8970)
+#define RTL931X_TRAP_CTRL			(0x8C00)
 
 /* Advanced SMI control for clause 45 PHYs */
 #define RTL930X_SMI_MAC_TYPE_CTRL		(0xCA04)
@@ -197,6 +207,19 @@
 
 /* Registers of the internal Serdes of the 8380 */
 #define RTL838X_SDS4_FIB_REG0			(0xF800)
+
+/* Chip configuration registers of the RTL9310 */
+#define RTL931X_MEM_ENCAP_INIT			(0x4854)
+#define RTL931X_MEM_MIB_INIT			(0x7E18)
+#define RTL931X_MEM_ACL_INIT			(0x40BC)
+#define RTL931X_MEM_ALE_INIT_0			(0x83F0)
+#define RTL931X_MEM_ALE_INIT_1			(0x83F4)
+#define RTL931X_MEM_ALE_INIT_2			(0x82E4)
+#define RTL931X_MDX_CTRL_RSVD			(0x0fcc)
+#define RTL931X_PS_SOC_CTRL			(0x13f8)
+#define RTL931X_SMI_10GPHY_POLLING_SEL2		(0xCF8)
+#define RTL931X_SMI_10GPHY_POLLING_SEL3		(0xCFC)
+#define RTL931X_SMI_10GPHY_POLLING_SEL4		(0xD00)
 
 inline int rtl838x_mac_port_ctrl(int p)
 {
