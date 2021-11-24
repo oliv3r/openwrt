@@ -1,0 +1,32 @@
+From 1fd1864a2ecda2b24c3be1e4a2d2b49808578aa8 Mon Sep 17 00:00:00 2001
+From: Sander Vanheule <sander@svanheule.net>
+Date: Mon, 1 Nov 2021 20:35:28 +0100
+Subject: [PATCH] gpio: realtek-otto: Add RTL930x support
+
+The RTL930x SoC series has support for 24 GPIOs, although not all lines
+may be broken out to a physical pad. Port order is reversed compared to
+RTL838x and RTL839x. The RTL930x series also has two VPEs and can
+distribute GPIO interrupts between the two threads.
+
+Tested on a Zyxel XGS1250-12 with RTL9302B SoC using OpenWrt.
+
+Signed-off-by: Sander Vanheule <sander@svanheule.net>
+---
+ drivers/gpio/gpio-realtek-otto.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/gpio/gpio-realtek-otto.c b/drivers/gpio/gpio-realtek-otto.c
+index c1193dd08fe0..fe2fc0ec0f55 100644
+--- a/drivers/gpio/gpio-realtek-otto.c
++++ b/drivers/gpio/gpio-realtek-otto.c
+@@ -291,6 +291,10 @@ static const struct of_device_id realtek_gpio_of_match[] = {
+ 	{
+ 		.compatible = "realtek,rtl8390-gpio",
+ 	},
++	{
++		.compatible = "realtek,rtl9300-gpio",
++		.data = (void *)(GPIO_PORTS_REVERSED | GPIO_INTERRUPTS_PER_CPU)
++	},
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(of, realtek_gpio_of_match);
