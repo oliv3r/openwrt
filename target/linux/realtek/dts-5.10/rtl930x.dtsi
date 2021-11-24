@@ -162,20 +162,18 @@
 			status = "disabled";
 		};
 
-		gpio0: gpio-controller@3500 {
-			compatible = "realtek,rtl8380-gpio", "realtek,otto-gpio";
-			reg = <0x3500 0x20>;
+	gpio0: gpio-controller@3300 {
+			compatible = "realtek,rtl9300-gpio", "realtek,otto-gpio";
+			reg = <0x3300 0x1c>, <0x3338 0x8>;
+
 			gpio-controller;
 			#gpio-cells = <2>;
-			ngpios = <32>;
-			interrupt-parent = <&intc>;
-			interrupts = <31>;
+			ngpios = <24>;
 
-			/*
-			 * currently, RTL930x GPIO is not supported in
-			 * upstreamed driver (gpio-realtek-otto)
-			 */
-			status = "disabled";
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			interrupt-parent = <&intc>;
+			interrupts = <13>;
 		};
 	};
 

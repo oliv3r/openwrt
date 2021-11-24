@@ -16,7 +16,7 @@
 	};
 
 	/* i2c of the SFP cage: port 0 */
-	i2c0: i2c-gpio-0 {
+/*	i2c0: i2c-gpio-0 {
 		compatible = "i2c-gpio";
 		sda-gpios = <&gpio0 9 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
 		scl-gpios = <&gpio0 8 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
@@ -24,9 +24,19 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 	};
+*/
+	i2c0: i2c-rtl9300-0 {
+		compatible = "realtek,rtl9300-i2c";
+		sda-pin = <9>;
+		scl-pin = <8>;
+		clock-frequency = <100000>;
+		reg = <0x1b00036c 0x3c>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
 
 	sfp0: sfp-p12 {
-		compatible = "sff,sfp";
+		compatible = "sff,sfp"; // TODO: SFP+???
 		i2c-bus = <&i2c0>;
 //		los-gpio = <&gpio0 17 GPIO_ACTIVE_HIGH>;
 //		tx-fault-gpio = <&gpio0 20 GPIO_ACTIVE_HIGH>;
@@ -75,6 +85,10 @@
 				label = "firmware";
 				reg = <0x2a0000 0xd50000>;
 				compatible = "denx,uimage";
+			};
+			partition@ff0000 {
+				label = "EEPROM";
+				reg = <0xff0000 0x10000>;
 			};
 		};
 	};
