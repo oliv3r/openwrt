@@ -25,19 +25,103 @@
 		#size-cells = <0>;
 	};
 */
-	i2c0: i2c-rtl9300-0 {
+
+	i2c0: i2c-rtl9300 {
 		compatible = "realtek,rtl9300-i2c";
-		sda-pin = <9>;
-		scl-pin = <8>;
-		clock-frequency = <100000>;
 		reg = <0x1b00036c 0x3c>;
 		#address-cells = <1>;
 		#size-cells = <0>;
+		sda-pin = <9>;
+		scl-pin = <8>;
+		clock-frequency = <100000>;
 	};
+
+	i2cmux {
+		compatible = "realtek,i2c-mux-rtl9300";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		i2c-parent = <&i2c0>;
+
+		i2c01: i2c-rtl9300-1 {
+			reg = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			sda-pin = <9>;
+			scl-pin = <8>;
+		};
+
+		i2c02: i2c-rtl9300-2 {
+			reg = <2>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			sda-pin = <10>;
+			scl-pin = <8>;
+		};
+
+		i2c03: i2c-rtl9300-3 {
+			reg = <3>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			sda-pin = <11>;
+			scl-pin = <8>;
+		};
+		
+		i2c04: i2c-rtl9300-4 {
+			reg = <4>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			sda-pin = <12>;
+			scl-pin = <8>;
+		};
+
+		i2c05: i2c-rtl9300-5 {
+			reg = <5>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			sda-pin = <13>;
+			scl-pin = <8>;
+		};
+
+		i2c06: i2c-rtl9300-6 {
+			reg = <6>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			sda-pin = <14>;
+			scl-pin = <8>;
+		};
+
+		i2c07: i2c-rtl9300-7 {
+			reg = <7>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			sda-pin = <15>;
+			scl-pin = <8>;
+		};
+	
+		i2c08: i2c-rtl9300-8 {
+			reg = <8>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			sda-pin = <16>;
+			scl-pin = <8>;
+		};
+	};
+	
+/*
+	i2c0: i2c-rtl9300-7 {
+		compatible = "realtek,rtl9300-i2c";
+		reg = <0x1b00036c 0x3c>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		sda-pin = <9>;
+		scl-pin = <17>;
+		clock-frequency = <100000>;
+	};
+*/
 
 	sfp0: sfp-p12 {
 		compatible = "sff,sfp"; // TODO: SFP+???
-		i2c-bus = <&i2c0>;
+		i2c-bus = <&i2c01>;
 //		los-gpio = <&gpio0 17 GPIO_ACTIVE_HIGH>;
 //		tx-fault-gpio = <&gpio0 20 GPIO_ACTIVE_HIGH>;
 //		mod-def0-gpio = <&gpio0 16 GPIO_ACTIVE_LOW>;
