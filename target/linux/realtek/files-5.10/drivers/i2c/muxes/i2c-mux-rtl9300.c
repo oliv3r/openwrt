@@ -43,8 +43,6 @@ static int rtl9300_i2c_mux_select(struct i2c_mux_core *muxc, u32 chan)
 {
 	struct rtl9300_mux *mux = i2c_mux_priv(muxc);
 
-	pr_debug("%s start\n", __func__);
-
 	// Set SCL pin
 	REG_MASK(channels[chan].scl_num, 0, BIT(I2C_CTRL1_GPIO8_SCL_SEL), I2C_CTRL1);
 
@@ -57,7 +55,6 @@ static int rtl9300_i2c_mux_select(struct i2c_mux_core *muxc, u32 chan)
 
 static int rtl9300_i2c_mux_deselect(struct i2c_mux_core *muxc, u32 chan)
 {
-	pr_debug("%s nothing to be done\n", __func__);
 	return 0;
 }
 
@@ -113,8 +110,6 @@ static int rtl9300_i2c_mux_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	pr_info("%s: DT found\n", __func__);
-
 	mux = devm_kzalloc(dev, sizeof(*mux), GFP_KERNEL);
 	if (!mux)
 		return -ENOMEM;
@@ -124,15 +119,7 @@ static int rtl9300_i2c_mux_probe(struct platform_device *pdev)
 	parent_np = mux_parent_adapter(dev, mux);
 	if (IS_ERR(parent_np))
 		return dev_err_probe(dev, PTR_ERR(parent_np), "i2c-parent adapter not found\n");
-/*
-	if (of_address_to_resource(parent, 0, &res))
-		return dev_err_probe(dev, -EINVAL, "failed to get i2c-parent adaptepter mem\n");
-*/
-//	mux->base = 0xbb00036c; // of_get_address(parent_np, 0, &size, &flags);
-	if (!mux->base) {
-		dev_err(dev, "I2C parent adapter not an RTL9300-I2C\n");
-		return -EINVAL;
-	}
+
 	pr_info("%s base memory %08x\n", __func__, (u32)mux->base);
 
 	children = of_get_child_count(node);

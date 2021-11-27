@@ -71,8 +71,6 @@ static void rtl9300_i2c_config_io(struct rtl9300_i2c *i2c, int scl_num, int sda_
 
 static int rtl9300_i2c_config_xfer(struct rtl9300_i2c *i2c, u16 addr, u16 len)
 {
-//	rtl9300_i2c_config_io(i2c, i2c->scl_num, i2c->sda_num);
-
 	// Set bus frequency
 	REG_MASK(0x3 << I2C_CTRL2_SCL_FREQ, i2c->bus_freq << I2C_CTRL2_SCL_FREQ, I2C_CTRL2);
 
@@ -89,8 +87,8 @@ static int rtl9300_i2c_config_xfer(struct rtl9300_i2c *i2c, u16 addr, u16 len)
 	REG_MASK(0x1 << I2C_CTRL2_READ_MODE, 0, I2C_CTRL2);
 
 	// Check the ACK delay to cause transfer fails
-	REG_MASK(0xf << I2C_CTRL2_CHECK_ACK_DELAY, 2 << I2C_CTRL2_CHECK_ACK_DELAY, I2C_CTRL2);
-	REG_MASK(0xf << I2C_CTRL2_DRIVE_ACK_DELAY, 4 << I2C_CTRL2_DRIVE_ACK_DELAY, I2C_CTRL2);
+//	REG_MASK(0xf << I2C_CTRL2_CHECK_ACK_DELAY, 2 << I2C_CTRL2_CHECK_ACK_DELAY, I2C_CTRL2);
+//	REG_MASK(0xf << I2C_CTRL2_DRIVE_ACK_DELAY, 4 << I2C_CTRL2_DRIVE_ACK_DELAY, I2C_CTRL2);
 
 	pr_debug("%s CTRL1: %08x, CTRL2: %08x\n", __func__,
 		 *(u32 *)REG(I2C_CTRL1), *(u32 *)REG(I2C_CTRL2));
@@ -167,9 +165,9 @@ static int rtl9300_i2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msg
 	mutex_lock(&i2c_lock);
 	for (i = 0; i < num; i++) {
 		pmsg = &msgs[i];
-
+		if (pmsg->addr < 80)
 		pr_debug("%s flags: %04x len %d addr %08x\n", __func__,
-			pmsg->flags, pmsg->len, pmsg->addr);
+			 pmsg->flags, pmsg->len, pmsg->addr);
 
 		rtl9300_i2c_config_xfer(i2c, pmsg->addr, pmsg->len);
 
@@ -178,8 +176,15 @@ static int rtl9300_i2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msg
 
 			ret = rtl9300_execute_xfer(i2c);
 			if (ret) {
+				if (pmsg->addr < 80)
+				pr_info("Write ERR, len %d addr %02x: %02x %02x %02x\n",
+					pmsg->len, pmsg->addr, pmsg->buf[0], pmsg->buf[1], pmsg->buf[2]);
 				pr_debug("Read failed\n");
 				break;
+			} else {
+				if (pmsg->addr < 80)
+				pr_info("Read OK, len %d addr %02x: %02x %02x %02x\n",
+					pmsg->len, pmsg->addr, pmsg->buf[0], pmsg->buf[1], pmsg->buf[2]);	
 			}
 			rtl9300_i2c_read(i2c, pmsg->buf, pmsg->len);
 		} else {
@@ -188,8 +193,14 @@ static int rtl9300_i2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msg
 			rtl9300_i2c_write(i2c, pmsg->buf, pmsg->len);
 			ret = rtl9300_execute_xfer(i2c);
 			if (ret) {
-				pr_debug("Write failed\n");
+				if (pmsg->addr < 80)
+				pr_info("Write ERR, len %d addr %02x: %02x %02x %02x\n",
+					pmsg->len, pmsg->addr, pmsg->buf[0], pmsg->buf[1], pmsg->buf[2]);
 				break;
+			} else {
+				if (pmsg->addr < 80)
+				pr_info("Write OK, len %d addr %02x: %02x %02x %02x\n",
+					pmsg->len, pmsg->addr, pmsg->buf[0], pmsg->buf[1], pmsg->buf[2]);
 			}
 		}
 	}
