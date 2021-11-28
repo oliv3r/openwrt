@@ -4,8 +4,6 @@
  * with up to 8 channels each, but which are not entirely
  * independent of each other
  */
-
-#include <linux/i2c.h>
 #include <linux/i2c-mux.h>
 #include <linux/module.h>
 #include <linux/mux/consumer.h>
@@ -13,11 +11,7 @@
 #include <linux/of_address.h>
 #include <linux/platform_device.h>
 
-#define I2C_CTRL1		0x00
-#define I2C_CTRL1_SDA_OUT_SEL	4
-#define I2C_CTRL1_GPIO8_SCL_SEL	3
-
-#define I2C_MST_GLB_CTRL	0x18
+#include "../busses/i2c-rtl9300.h"
 
 #define NUM_MASTERS		2
 #define NUM_BUSSES		8
@@ -37,6 +31,7 @@ struct rtl9300_mux {
 	void __iomem *base;
 	struct device *dev;
 	struct i2c_adapter *parent;
+	struct rtl9300_i2c * i2c;
 };
 
 static int rtl9300_i2c_mux_select(struct i2c_mux_core *muxc, u32 chan)
@@ -49,6 +44,9 @@ static int rtl9300_i2c_mux_select(struct i2c_mux_core *muxc, u32 chan)
 	// Set SDA pin
 	REG_MASK(channels[chan].scl_num, 0x7 << I2C_CTRL1_SDA_OUT_SEL,
 		 channels[chan].sda_num << I2C_CTRL1_SDA_OUT_SEL, I2C_CTRL1);
+
+	mux->i2c->sda_num = channels[chan].sda_num;
+	mux->i2c->scl_num = channels[chan].scl_num;
 
 	return 0;
 }
@@ -80,7 +78,8 @@ static struct device_node *mux_parent_adapter(struct device *dev, struct rtl9300
 	}
 
 	mux->parent = parent;
-	mux->base = *(u32 *)i2c_get_adapdata(parent);
+	mux->i2c = (struct rtl9300_i2c *)i2c_get_adapdata(parent);
+	mux->base = mux->i2c->base;
 
 	return parent_np;
 }
@@ -175,14 +174,14 @@ static int rtl9300_i2c_mux_probe(struct platform_device *pdev)
 		}
 		pr_info("%s channel %d sda_num %d\n", __func__, chan, channels[chan].sda_num);
 
-		ret = i2c_mux_add_adapter(muxc, 0, chan, 0);
-		if (ret)
-			goto err_children;
-
 		// Set SDA pin to I2C functionality
 		v = readl(REG(0, I2C_MST_GLB_CTRL));
 		v |= BIT(channels[chan].sda_num);
 		writel(v, REG(0, I2C_MST_GLB_CTRL));
+
+		ret = i2c_mux_add_adapter(muxc, 0, chan, 0);
+		if (ret)
+			goto err_children;
 	}
 
 	dev_info(dev, "%d-port mux on %s adapter\n", children, mux->parent->name);

@@ -1,48 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
-#include <linux/i2c.h>
 #include <linux/module.h>
 #include <linux/of_platform.h>
-
-#define I2C_CTRL1			0x00
-#define I2C_CTRL1_MEM_ADDR		8
-#define I2C_CTRL1_SDA_OUT_SEL		4
-#define I2C_CTRL1_GPIO8_SCL_SEL		3
-#define I2C_CTRL1_RWOP			2
-#define I2C_CTRL1_I2C_FAIL		1
-#define I2C_CTRL1_I2C_TRIG		0
-
-#define I2C_CTRL2			0x04
-#define I2C_CTRL2_DRIVE_ACK_DELAY	20
-#define I2C_CTRL2_CHECK_ACK_DELAY	16
-#define I2C_CTRL2_READ_MODE		15
-#define I2C_CTRL2_DEV_ADDR		8
-#define I2C_CTRL2_DATA_WIDTH		4
-#define I2C_CTRL2_MADDR_WIDTH		2
-#define I2C_CTRL2_SCL_FREQ		0
-
-#define I2C_DATA_WORD0		0x08
-
-#define I2C_MST_GLB_CTRL	0x18
-
-#define RTL9300_I2C_STD_FREQ	0
-#define RTL9300_I2C_FAST_FREQ	1
+#include "i2c-rtl9300.h"
 
 #define REG(x)		(i2c->base + x + (i2c->scl_num ? 0x1c : 0))
 #define REG_MASK(clear, set, reg)	\
 			writel((readl(REG(reg)) & ~(clear)) | (set), REG(reg))
 
 DEFINE_MUTEX(i2c_lock);
-
-struct rtl9300_i2c {
-	void __iomem *base;		// Must be first for i2c-mux-rtl9300 to pick up
-	struct device *dev;
-	struct i2c_adapter adap;
-	u8 bus_freq;
-	u8 sda_num;			// SDA channel number
-	u8 scl_num;			// SCL channel, mapping to master 1 or 2
-};
-
 
 static void rtl9300_i2c_reg_addr_set(struct rtl9300_i2c *i2c, u32 reg, u16 len)
 {
@@ -79,9 +45,6 @@ static int rtl9300_i2c_config_xfer(struct rtl9300_i2c *i2c, u16 addr, u16 len)
 
 	// Set data length
 	REG_MASK(0xf << I2C_CTRL2_DATA_WIDTH, (len - 1) << I2C_CTRL2_DATA_WIDTH, I2C_CTRL2);
-
-	// Set register address width to 0, register address, too
-	rtl9300_i2c_reg_addr_set(i2c, 0, 0);
 
 	// Set read mode to random
 	REG_MASK(0x1 << I2C_CTRL2_READ_MODE, 0, I2C_CTRL2);
@@ -145,6 +108,8 @@ static int rtl9300_execute_xfer(struct rtl9300_i2c *i2c)
 {
 	u32 v;
 
+	pr_debug("%s: CTRL1 %08x CTRL2: %08x GLB-CTRL %08x\n", __func__,
+		readl(REG(I2C_CTRL1)), readl(REG(I2C_CTRL2)), readl(REG(I2C_MST_GLB_CTRL)));
 	REG_MASK(0, BIT(I2C_CTRL1_I2C_TRIG), I2C_CTRL1);
 	do {
 		v = readl(REG(I2C_CTRL1));
@@ -154,6 +119,103 @@ static int rtl9300_execute_xfer(struct rtl9300_i2c *i2c)
 		return -EIO;
 
 	return 0;
+}
+
+static int rtl9300_i2c_smbus_xfer(struct i2c_adapter * adap, u16 addr,
+		  unsigned short flags, char read_write,
+		  u8 command, int size, union i2c_smbus_data * data)
+{
+	struct rtl9300_i2c *i2c = i2c_get_adapdata(adap);
+	int len = 0, ret;
+
+	mutex_lock(&i2c_lock);
+	switch (size) {
+	case I2C_SMBUS_QUICK:
+		pr_debug("I2C_SMBUS_QUICK %02x read %d\n", addr, read_write);
+		rtl9300_i2c_config_xfer(i2c, addr, 0);
+		rtl9300_i2c_reg_addr_set(i2c, 0, 0);
+		break;
+
+	case I2C_SMBUS_BYTE:
+		if (read_write == I2C_SMBUS_WRITE) {
+			pr_debug("I2C_SMBUS_BYTE WRITE addr %02x\n", addr);
+			rtl9300_i2c_config_xfer(i2c, addr, 0);
+			rtl9300_i2c_reg_addr_set(i2c, command, 1);
+		} else {
+			pr_debug("I2C_SMBUS_BYTE READ addr %02x\n", addr);
+			rtl9300_i2c_config_xfer(i2c, addr, 1);
+			rtl9300_i2c_reg_addr_set(i2c, 0, 0);
+		}
+		break;
+
+	case I2C_SMBUS_BYTE_DATA:
+		pr_debug("I2C_SMBUS_BYTE_DATA %02x, read %d cmd %02x\n", addr, read_write, command);
+		rtl9300_i2c_reg_addr_set(i2c, command, 1);
+		rtl9300_i2c_config_xfer(i2c, addr, 1);
+
+		if (read_write == I2C_SMBUS_WRITE) {
+			pr_debug("--> data %02x\n", data->byte);
+			writel(data->byte, REG(I2C_DATA_WORD0));
+		}
+		break;
+
+	case I2C_SMBUS_WORD_DATA:
+		pr_debug("I2C_SMBUS_WORD %02x, read %d\n", addr, read_write);
+		rtl9300_i2c_reg_addr_set(i2c, command, 1);
+		rtl9300_i2c_config_xfer(i2c, addr, 2);
+		if (read_write == I2C_SMBUS_WRITE)
+			writel(data->word, REG(I2C_DATA_WORD0));
+		break;
+
+	case I2C_SMBUS_BLOCK_DATA:
+		pr_debug("I2C_SMBUS_BLOCK_DATA %02x, read %d, len %d\n",
+			addr, read_write, data->block[0]);
+		rtl9300_i2c_reg_addr_set(i2c, command, 1);
+		rtl9300_i2c_config_xfer(i2c, addr, data->block[0]);
+		if (read_write == I2C_SMBUS_WRITE)
+			rtl9300_i2c_write(i2c, &data->block[1], data->block[0]);
+		len = data->block[0];
+		break;
+
+	default:
+		dev_warn(&adap->dev, "Unsupported transaction %d\n", size);
+		return -EOPNOTSUPP;
+	}
+	if (read_write == I2C_SMBUS_READ)
+		REG_MASK(BIT(I2C_CTRL1_RWOP), 0, I2C_CTRL1);
+	else
+		REG_MASK(0, BIT(I2C_CTRL1_RWOP), I2C_CTRL1);
+
+	ret = rtl9300_execute_xfer(i2c);
+	if (data->block) {
+		if (ret) {
+			pr_debug("Exec ERR, read %1d size %04x len %d addr %02x\n",
+				read_write, size, len, addr);
+		} else {
+			pr_debug("Exec OK, read %1d size %04x len %d addr %02x\n",
+				read_write, size, len, addr);
+		}
+	} else {
+		pr_debug("Exec addr %02x: res %d, wrt %1d\n", addr, ret, read_write);
+	}
+
+	if (read_write == I2C_SMBUS_READ) {
+		if (size == I2C_SMBUS_BYTE || size == I2C_SMBUS_BYTE_DATA){
+			data->byte = readl(REG(I2C_DATA_WORD0));
+			pr_debug("Read reg %08x byte: %02x\n",  readl(REG(I2C_DATA_WORD0)), data->byte);
+		} else if (size == I2C_SMBUS_WORD_DATA) {
+			data->word = readl(REG(I2C_DATA_WORD0));
+			pr_debug("Read %08x word: %04x\n",  readl(REG(I2C_DATA_WORD0)), data->word);
+		} else if (len > 0) {
+			rtl9300_i2c_read(i2c, &data->block[0], len);
+			pr_debug("Block read len %d: %02x %02x %02x\n", len,
+				data->block[0], data->block[1], data->block[0]);
+		}
+	}
+
+	mutex_unlock(&i2c_lock);
+
+	return ret;
 }
 
 static int rtl9300_i2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msgs, int num)
@@ -170,20 +232,21 @@ static int rtl9300_i2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msg
 			 pmsg->flags, pmsg->len, pmsg->addr);
 
 		rtl9300_i2c_config_xfer(i2c, pmsg->addr, pmsg->len);
+		// Set register address width to 0, register address, too
+		rtl9300_i2c_reg_addr_set(i2c, 0, 0);
+
 
 		if (pmsg->flags & I2C_M_RD) {
 			REG_MASK(BIT(I2C_CTRL1_RWOP), 0, I2C_CTRL1);
 
 			ret = rtl9300_execute_xfer(i2c);
 			if (ret) {
-				if (pmsg->addr < 80)
-				pr_info("Write ERR, len %d addr %02x: %02x %02x %02x\n",
+				pr_debug("Write ERR, len %d addr %02x: %02x %02x %02x\n",
 					pmsg->len, pmsg->addr, pmsg->buf[0], pmsg->buf[1], pmsg->buf[2]);
-				pr_debug("Read failed\n");
 				break;
 			} else {
 				if (pmsg->addr < 80)
-				pr_info("Read OK, len %d addr %02x: %02x %02x %02x\n",
+				pr_debug("Read OK, len %d addr %02x: %02x %02x %02x\n",
 					pmsg->len, pmsg->addr, pmsg->buf[0], pmsg->buf[1], pmsg->buf[2]);	
 			}
 			rtl9300_i2c_read(i2c, pmsg->buf, pmsg->len);
@@ -194,12 +257,12 @@ static int rtl9300_i2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msg
 			ret = rtl9300_execute_xfer(i2c);
 			if (ret) {
 				if (pmsg->addr < 80)
-				pr_info("Write ERR, len %d addr %02x: %02x %02x %02x\n",
+				pr_debug("Write ERR, len %d addr %02x: %02x %02x %02x\n",
 					pmsg->len, pmsg->addr, pmsg->buf[0], pmsg->buf[1], pmsg->buf[2]);
 				break;
 			} else {
 				if (pmsg->addr < 80)
-				pr_info("Write OK, len %d addr %02x: %02x %02x %02x\n",
+				pr_debug("Write OK, len %d addr %02x: %02x %02x %02x\n",
 					pmsg->len, pmsg->addr, pmsg->buf[0], pmsg->buf[1], pmsg->buf[2]);
 			}
 		}
@@ -211,14 +274,23 @@ static int rtl9300_i2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msg
 	return i;
 }
 
-
+/*
 static u32 rtl9300_i2c_func(struct i2c_adapter *a)
 {
 	return I2C_FUNC_I2C | I2C_FUNC_SMBUS_EMUL;
 }
+*/
+
+static u32 rtl9300_i2c_func(struct i2c_adapter *a)
+{
+	return I2C_FUNC_SMBUS_QUICK | I2C_FUNC_SMBUS_BYTE |
+	       I2C_FUNC_SMBUS_BYTE_DATA | I2C_FUNC_SMBUS_WORD_DATA |
+	       I2C_FUNC_SMBUS_BLOCK_DATA | I2C_FUNC_I2C;
+}
 
 static const struct i2c_algorithm rtl9300_i2c_algo = {
 	.master_xfer	= rtl9300_i2c_master_xfer,
+	.smbus_xfer	= rtl9300_i2c_smbus_xfer,
 	.functionality	= rtl9300_i2c_func,
 };
 
@@ -244,7 +316,6 @@ static int rtl9300_i2c_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	pr_info("%s: DT found\n", __func__);
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 
 	i2c = devm_kzalloc(&pdev->dev, sizeof(struct rtl9300_i2c), GFP_KERNEL);
@@ -255,7 +326,7 @@ static int rtl9300_i2c_probe(struct platform_device *pdev)
 	if (IS_ERR(i2c->base))
 		return PTR_ERR(i2c->base);
 
-	pr_info("%s base memory %08x\n", __func__, (u32)i2c->base);
+	pr_debug("%s base memory %08x\n", __func__, (u32)i2c->base);
 	i2c->dev = &pdev->dev;
 
 	if (of_property_read_u32(node, "clock-frequency", &clock_freq)) {
