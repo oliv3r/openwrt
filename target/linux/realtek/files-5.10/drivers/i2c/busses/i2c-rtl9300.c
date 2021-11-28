@@ -187,19 +187,8 @@ static int rtl9300_i2c_smbus_xfer(struct i2c_adapter * adap, u16 addr,
 		REG_MASK(0, BIT(I2C_CTRL1_RWOP), I2C_CTRL1);
 
 	ret = rtl9300_execute_xfer(i2c);
-	if (data->block) {
-		if (ret) {
-			pr_debug("Exec ERR, read %1d size %04x len %d addr %02x\n",
-				read_write, size, len, addr);
-		} else {
-			pr_debug("Exec OK, read %1d size %04x len %d addr %02x\n",
-				read_write, size, len, addr);
-		}
-	} else {
-		pr_debug("Exec addr %02x: res %d, wrt %1d\n", addr, ret, read_write);
-	}
 
-	if (read_write == I2C_SMBUS_READ) {
+	if (!ret && (read_write == I2C_SMBUS_READ)) {
 		if (size == I2C_SMBUS_BYTE || size == I2C_SMBUS_BYTE_DATA){
 			data->byte = readl(REG(I2C_DATA_WORD0));
 			pr_debug("Read reg %08x byte: %02x\n",  readl(REG(I2C_DATA_WORD0)), data->byte);
@@ -274,22 +263,16 @@ static int rtl9300_i2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msg
 	return i;
 }
 
-/*
-static u32 rtl9300_i2c_func(struct i2c_adapter *a)
-{
-	return I2C_FUNC_I2C | I2C_FUNC_SMBUS_EMUL;
-}
-*/
-
 static u32 rtl9300_i2c_func(struct i2c_adapter *a)
 {
 	return I2C_FUNC_SMBUS_QUICK | I2C_FUNC_SMBUS_BYTE |
 	       I2C_FUNC_SMBUS_BYTE_DATA | I2C_FUNC_SMBUS_WORD_DATA |
-	       I2C_FUNC_SMBUS_BLOCK_DATA | I2C_FUNC_I2C;
+	       I2C_FUNC_SMBUS_BLOCK_DATA;
 }
 
 static const struct i2c_algorithm rtl9300_i2c_algo = {
-	.master_xfer	= rtl9300_i2c_master_xfer,
+// If we provide this, then __i2c_smbus_xfer() will pick it up and try to emulate an smbus_xfer
+//	.master_xfer	= rtl9300_i2c_master_xfer,
 	.smbus_xfer	= rtl9300_i2c_smbus_xfer,
 	.functionality	= rtl9300_i2c_func,
 };
