@@ -223,7 +223,10 @@ void rtl9300_sds_rst(int sds_num, u32 mode)
 		       0x02A4, 0x02A4, 0x0198, 0x0198 };
 	u8  lsb[]  = { 0, 6, 12, 18, 0, 6, 12, 18, 0, 6, 0, 6};
 
-	pr_info("%s %d\n", __func__, mode);
+	pr_info("%s setting sds %d to %d\n", __func__, sds_num, mode);
+	pr_info("%s: WAS 194:%08x 198:%08x 2a0:%08x 2a4:%08x\n", __func__,
+		sw_r32(0x194), sw_r32(0x198), sw_r32(0x2a0), sw_r32(0x2a4));
+
 	if (sds_num < 0 || sds_num > 11) {
 		pr_err("Wrong SerDes number: %d\n", sds_num);
 		return;
@@ -2438,7 +2441,7 @@ static int rtl9310_serdes_probe(struct phy_device *phydev)
 		return -ENOMEM;
 
 	priv->name = "RTL9310 Serdes";
-	return rtl9300_configure_serdes(phydev);
+	return rtl9310_configure_serdes(phydev);
 }
 
 static int rtl9300_serdes_probe(struct phy_device *phydev)
@@ -2454,9 +2457,6 @@ static int rtl9300_serdes_probe(struct phy_device *phydev)
 		return rtl9310_serdes_probe(phydev);
 
 	if (soc_info.family != RTL9300_FAMILY_ID)
-		return -ENODEV;
-
-	if (addr < 24)
 		return -ENODEV;
 
 	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);

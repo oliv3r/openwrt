@@ -1172,6 +1172,7 @@ static int rtl838x_eth_tx(struct sk_buff *skb, struct net_device *dev)
 	int dest_port = -1;
 	int q = skb_get_queue_mapping(skb) % TXRINGS;
 
+	pr_debug("%s ---------------------------------------------------------------\n", __func__);
 	if (q) // Check for high prio queue
 		pr_debug("SKB priority: %d\n", skb->priority);
 
@@ -1416,9 +1417,11 @@ static void rtl838x_validate(struct phylink_config *config,
 			 unsigned long *supported,
 			 struct phylink_link_state *state)
 {
+	struct net_device *dev = container_of(config->dev, struct net_device, dev);
+	struct rtl838x_eth_priv *priv = netdev_priv(dev);
 	__ETHTOOL_DECLARE_LINK_MODE_MASK(mask) = { 0, };
 
-	pr_debug("In %s\n", __func__);
+	pr_info("In %s\n", __func__);
 
 	if (!phy_interface_mode_is_rgmii(state->interface) &&
 	    state->interface != PHY_INTERFACE_MODE_1000BASEX &&
@@ -1448,6 +1451,9 @@ static void rtl838x_validate(struct phylink_config *config,
 		phylink_set(mask, 1000baseT_Half);
 	}
 
+	if (priv->family_id >= 0x9300)
+		phylink_set(mask, 10000baseT_Full);
+	
 	phylink_set(mask, 10baseT_Half);
 	phylink_set(mask, 10baseT_Full);
 	phylink_set(mask, 100baseT_Half);
@@ -1729,6 +1735,17 @@ static int rtl931x_mdio_read(struct mii_bus *bus, int mii_id, int regnum)
 	return val;
 }
 
+static int rtl839x_mdio_write(struct mii_bus *bus, int mii_id,
+			      int regnum, u16 value)
+{
+	struct rtl838x_eth_priv *priv = bus->priv;
+
+	if (mii_id >= 48 && mii_id <= 49 && priv->id == 0x8393)
+		return rtl839x_write_sds_phy(mii_id, regnum, value);
+
+	return rtl839x_write_phy(mii_id, 0, regnum, value);
+}
+
 static int rtl838x_mdio_write(struct mii_bus *bus, int mii_id,
 			      int regnum, u16 value)
 {
@@ -1744,26 +1761,13 @@ static int rtl838x_mdio_write(struct mii_bus *bus, int mii_id,
 	return rtl838x_write_phy(mii_id, 0, regnum, value);
 }
 
-static int rtl839x_mdio_write(struct mii_bus *bus, int mii_id,
-			      int regnum, u16 value)
-{
-	struct rtl838x_eth_priv *priv = bus->priv;
-
-	if (mii_id >= 48 && mii_id <= 49 && priv->id == 0x8393)
-		return rtl839x_write_sds_phy(mii_id, regnum, value);
-
-	return rtl839x_write_phy(mii_id, 0, regnum, value);
-}
-
 static int rtl930x_mdio_write(struct mii_bus *bus, int mii_id,
 			      int regnum, u16 value)
 {
 	struct rtl838x_eth_priv *priv = bus->priv;
 
-	if (priv->phy_is_internal[mii_id]) {
-		pr_info("Writing to internal phy %d\n", mii_id); 
+	if (priv->sds_id[mii_id] >= 0)
 		return rtl930x_write_sds_phy(priv->sds_id[mii_id], 0, regnum, value);
-	}
 
 	if (regnum & MII_ADDR_C45) {
 		regnum &= ~MII_ADDR_C45;
@@ -1829,6 +1833,8 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 	// Mapping of port to phy-addresses on an SMI bus
 	poll_sel[0] = poll_sel[1] = 0;
 	for (i = 0; i < 28; i++) {
+		pr_debug("%s port %d: smi_addr %d, smi_bus %d\n",
+			__func__, i, priv->smi_addr[i], priv->smi_bus[i]);
 		pos = (i % 6) * 5;
 		sw_w32_mask(0x1f << pos, priv->smi_addr[i] << pos,
 			    RTL930X_SMI_PORT0_5_ADDR + (i / 6) * 4);
@@ -1846,15 +1852,16 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 		sw_r32(RTL930X_SMI_PORT0_15_POLLING_SEL), sw_r32(RTL930X_SMI_PORT16_27_POLLING_SEL));
 
 	// Configure which SMI bus is behind which port number
-	sw_w32(poll_sel[0], RTL930X_SMI_PORT0_15_POLLING_SEL);
+/*	sw_w32(poll_sel[0], RTL930X_SMI_PORT0_15_POLLING_SEL);
 	sw_w32(poll_sel[1], RTL930X_SMI_PORT16_27_POLLING_SEL);
-
+*/
 	pr_info("now: RTL930X_SMI_PORT0_15_POLLING_SEL: %08x, RTL930X_SMI_PORT0_15_POLLING_SEL: %08x\n",
 		sw_r32(RTL930X_SMI_PORT0_15_POLLING_SEL), sw_r32(RTL930X_SMI_PORT16_27_POLLING_SEL));
 
+	pr_info("%s: BEFORE: RTL930X_SMI_GLB_CTRL %08x\n", __func__, sw_r32(RTL930X_SMI_GLB_CTRL));
 	// Enable polling on the respective SMI busses
 	sw_w32_mask(0, poll_ctrl, RTL930X_SMI_GLB_CTRL);
-	pr_info("Poll ctrl: %08x\n", poll_ctrl);
+	pr_info("RTL930X_SMI_GLB_CTRL ctrl: %08x\n", poll_ctrl);
 
 	// Configure which SMI busses are polled in c45 based on a c45 PHY being on that bus
 	for (i = 0; i < 4; i++)
@@ -1863,7 +1870,10 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 
 	pr_info("c45_mask: %08x\n", c45_mask);
 	sw_w32_mask(0, c45_mask, RTL930X_SMI_GLB_CTRL);
+	pr_info("%s: AFTER: RTL930X_SMI_GLB_CTRL %08x\n", __func__, sw_r32(RTL930X_SMI_GLB_CTRL));
 
+	// TODO: Needs to be done for lower ports, too, should be 0x000000cc
+	pr_info("BEFORE: RTL930X_SMI_MAC_TYPE_CTRL %08x\n", sw_r32(RTL930X_SMI_MAC_TYPE_CTRL));
 	// Ports 24 to 27 are 2.5 or 10Gig, set this type (1) or (0) for internal SerDes
 	for (i = 24; i < 28; i++) {
 		pos = (i - 24) * 3 + 12;
@@ -1872,6 +1882,7 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 		else
 			sw_w32_mask(0x7 << pos, 1 << pos, RTL930X_SMI_MAC_TYPE_CTRL);
 	}
+	pr_info("AFTER: RTL930X_SMI_MAC_TYPE_CTRL %08x\n", sw_r32(RTL930X_SMI_MAC_TYPE_CTRL));
 
 	// TODO: Set up RTL9300_SMI_10GPHY_POLLING_SEL_0_ADDR for Aquantia PHYs on 1250
 
@@ -1987,7 +1998,7 @@ static int rtl838x_mdio_init(struct rtl838x_eth_priv *priv)
 	u32 pn;
 	int ret;
 
-	pr_debug("%s called\n", __func__);
+	pr_info("%s called\n", __func__);
 	mii_np = of_get_child_by_name(priv->pdev->dev.of_node, "mdio-bus");
 
 	if (!mii_np) {
@@ -2048,6 +2059,9 @@ static int rtl838x_mdio_init(struct rtl838x_eth_priv *priv)
 			smi_addr[1] = pn;
 		}
 
+		if (of_property_read_u8(dn, "sds", &priv->sds_id[pn]))
+			priv->sds_id[pn] = -1;
+
 		if (pn < MAX_PORTS) {
 			priv->smi_bus[pn] = smi_addr[0];
 			priv->smi_addr[pn] = smi_addr[1];
@@ -2064,9 +2078,11 @@ static int rtl838x_mdio_init(struct rtl838x_eth_priv *priv)
 
 	}
 
+	pr_info("%s A\n", __func__);
 	snprintf(priv->mii_bus->id, MII_BUS_ID_SIZE, "%pOFn", mii_np);
 	ret = of_mdiobus_register(priv->mii_bus, mii_np);
 
+	pr_info("%s B ret %d\n", __func__, ret);
 err_put_node:
 	of_node_put(mii_np);
 	return ret;
@@ -2347,6 +2363,7 @@ static int __init rtl838x_eth_probe(struct platform_device *pdev)
 	if (err)
 		goto err_free;
 
+	pr_info("%s A\n", __func__);
 	err = register_netdev(dev);
 	if (err)
 		goto err_free;
@@ -2357,8 +2374,10 @@ static int __init rtl838x_eth_probe(struct platform_device *pdev)
 		netif_napi_add(dev, &priv->rx_qs[i].napi, rtl838x_poll_rx, 64);
 	}
 
+	pr_info("%s b\n", __func__);
 	platform_set_drvdata(pdev, dev);
 
+	pr_info("%s c\n", __func__);
 	phy_mode = PHY_INTERFACE_MODE_NA;
 	err = of_get_phy_mode(dn, &phy_mode);
 	if (err < 0) {
@@ -2369,6 +2388,7 @@ static int __init rtl838x_eth_probe(struct platform_device *pdev)
 	priv->phylink_config.dev = &dev->dev;
 	priv->phylink_config.type = PHYLINK_NETDEV;
 
+	pr_info("%s d\n", __func__);
 	phylink = phylink_create(&priv->phylink_config, pdev->dev.fwnode,
 				 phy_mode, &rtl838x_phylink_ops);
 	if (IS_ERR(phylink)) {

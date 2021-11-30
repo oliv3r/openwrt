@@ -125,6 +125,7 @@ void rtl930x_print_matrix(void);
 
 /* RTL931x-specific */
 irqreturn_t rtl931x_switch_irq(int irq, void *dev_id);
+void rtl9310_sds_rst(int sds_num, u32 mode);
 
 #endif /* _NET_DSA_RTL83XX_H */
 

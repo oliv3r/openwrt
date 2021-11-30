@@ -418,7 +418,6 @@ static int sfp_smbus_read(struct sfp *sfp, bool a2, u8 dev_addr, void *buf,
 	union i2c_smbus_data data;
 	u8 bus_addr = a2 ? 0x51 : 0x50, *val = buf;
 	int ret;
-	int l;
 
 	while (len > 0) {
 		ret = i2c_smbus_xfer(sfp->i2c, bus_addr, 0, I2C_SMBUS_READ,

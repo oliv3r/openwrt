@@ -9,7 +9,6 @@
 
 extern struct rtl83xx_soc_info soc_info;
 
-
 static void rtl83xx_init_stats(struct rtl838x_switch_priv *priv)
 {
 	mutex_lock(&priv->reg_mutex);
@@ -38,7 +37,7 @@ static void rtl83xx_enable_phy_polling(struct rtl838x_switch_priv *priv)
 			v |= BIT_ULL(i);
 	}
 
-	pr_debug("%s: %16llx\n", __func__, v);
+	pr_info("%s: %16llx\n", __func__, v);
 	priv->r->set_port_reg_le(v, priv->r->smi_poll_ctrl);
 
 	/* PHY update complete, there is no global PHY polling enable bit on the 9300 */
@@ -302,9 +301,10 @@ static void rtl93xx_phylink_validate(struct dsa_switch *ds, int port,
 				     unsigned long *supported,
 				     struct phylink_link_state *state)
 {
+	struct rtl838x_switch_priv *priv = ds->priv;
 	__ETHTOOL_DECLARE_LINK_MODE_MASK(mask) = { 0, };
 
-	pr_debug("In %s port %d, state is %d (%s)", __func__, port, state->interface,
+	pr_info("In %s port %d, state is %d (%s)", __func__, port, state->interface,
 		 phy_modes(state->interface));
 
 	if (!phy_interface_mode_is_rgmii(state->interface) &&
@@ -342,11 +342,11 @@ static void rtl93xx_phylink_validate(struct dsa_switch *ds, int port,
 		phylink_set(mask, 1000baseT_Half);
 	}
 
-	/* On the RTL9300 family of SoCs, ports 26 to 27 may be SFP ports TODO: take out of .dts */
-	if (port >= 26 && port <= 27)
+	// Internal phys of the RTL93xx family provide 10G
+	if (priv->ports[port].phy_is_integrated) {
 		phylink_set(mask, 1000baseX_Full);
-	if (port >= 26 && port <= 27)
 		phylink_set(mask, 10000baseKR_Full);
+	}
 
 	phylink_set(mask, 10baseT_Half);
 	phylink_set(mask, 10baseT_Full);
@@ -421,14 +421,14 @@ static int rtl93xx_phylink_mac_link_state(struct dsa_switch *ds, int port,
 	 * On the RTL9300 for at least the RTL8226B PHY, the MAC-side link
 	 * state needs to be read twice in order to read a correct result.
 	 * This would not be necessary for ports connected e.g. to RTL8218D
-	 * PHYs.
+	 * PHYs. The internal serdes for SFP modules needs this, too.
 	 */
 	state->link = 0;
 	link = priv->r->get_port_reg_le(priv->r->mac_link_sts);
 	link = priv->r->get_port_reg_le(priv->r->mac_link_sts);
 	if (link & BIT_ULL(port))
 		state->link = 1;
-	pr_debug("%s: link state port %d: %llx, media %08x\n", __func__, port,
+	pr_info("%s: link state %016llx port %d: %llx, media %08x\n", __func__, link, port,
 		 link & BIT_ULL(port), sw_r32(RTL930X_MAC_LINK_MEDIA_STS));
 
 	state->duplex = 0;
@@ -462,7 +462,7 @@ static int rtl93xx_phylink_mac_link_state(struct dsa_switch *ds, int port,
 		pr_err("%s: unknown speed: %d\n", __func__, (u32)speed & 0xf);
 	}
 
-	pr_debug("%s: speed is: %d %d\n", __func__, (u32)speed & 0xf, state->speed);
+	pr_info("%s: speed is: %d %d\n", __func__, (u32)speed & 0xf, state->speed);
 	state->pause &= (MLO_PAUSE_RX | MLO_PAUSE_TX);
 	if (priv->r->get_port_reg_le(priv->r->mac_rx_pause_sts) & BIT_ULL(port))
 		state->pause |= MLO_PAUSE_RX;
@@ -586,6 +586,88 @@ static void rtl83xx_phylink_mac_config(struct dsa_switch *ds, int port,
 	sw_w32(reg, priv->r->mac_force_mode_ctrl(port));
 }
 
+void rtl9310_sds_mode_usxgmii(int sds_num)
+{
+	u32 a[12] = {0x13a4, 0x13a4, 0x13a8, 0x13a8, 0x13AC, 0x13B0, 0x13B4, 0x13B4,
+			0x13B8, 0x13B8, 0x13B8, 0x13B8};
+	u32 o[12] = {0, 16, 0, 16, 0, 0, 0, 16, 0, 4, 8, 12};
+	u32 v[12] = {0x5101, 0x5101, 0x5101, 0x5101, 0x5101, 0x50101, 0x55, 0x55, 0xf, 0xf, 0xf, 0xf};
+// uboot uses
+//	u32 v[12] = {0x4101, 0x4101, 0x4101, 0x4101, 0x4101, 0x40101, 0x45, 0x45, 0x9, 0x9, 0x9, 0x9};
+	u32 m[12] = {0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0x7ffff, 0xff, 0xff, 0xf, 0xf, 0xf, 0xf};
+	int n = sds_num - 2;
+
+	if (sds_num < 0 || sds_num > 13)
+		return;
+
+	sw_w32_mask(m[n] << o[n], v[n] << o[n], a[n]);
+}
+
+static void rtl931x_phylink_mac_config(struct dsa_switch *ds, int port,
+					unsigned int mode,
+					const struct phylink_link_state *state)
+{
+	struct rtl838x_switch_priv *priv = ds->priv;
+	int sds_num, sds_mode, ana_sds_mode = 0;
+	u32 reg;
+
+	sds_num = priv->ports[port].sds_num;
+
+	pr_info("In %s, port %d, sds %d\n", __func__, port, sds_num);
+	switch (state->interface) {
+	case PHY_INTERFACE_MODE_HSGMII:
+		sds_mode = 0x12;
+		break;
+	case PHY_INTERFACE_MODE_1000BASEX:
+		sds_mode = 0x9f;
+		ana_sds_mode = 0x9;
+		break;
+	case PHY_INTERFACE_MODE_XGMII:
+		sds_mode = 0x10;
+		break;
+	case PHY_INTERFACE_MODE_10GKR:
+		sds_mode = 0x9f; // 10G 1000X Auto
+		ana_sds_mode = 0x39;
+		break;
+	case PHY_INTERFACE_MODE_USXGMII:
+		sds_mode = 0x0d;
+		break;
+	case PHY_INTERFACE_MODE_SMII:
+		sds_mode = 0x02;
+		break;
+	case PHY_INTERFACE_MODE_QSGMII:
+		sds_mode = 0x06;
+		break;
+	default:
+		pr_err("%s: unknown serdes mode: %s\n",
+		       __func__, phy_modes(state->interface));
+		return;
+	}
+
+	pr_info("%s: resetting SDS %d to mode 0x%x analog mode 0x%x\n",
+		__func__, sds_num, sds_mode, ana_sds_mode);
+	rtl9310_sds_rst(sds_num, sds_mode);
+
+	if (state->interface == PHY_INTERFACE_MODE_USXGMII)
+		rtl9310_sds_mode_usxgmii(priv->ports[port].sds_num);
+
+	if (ana_sds_mode)
+		pr_info("%s setting fibre mode\n", __func__);
+
+	reg = sw_r32(priv->r->mac_force_mode_ctrl(port));
+	reg &= ~(RTL931X_DUPLEX_MODE | RTL931X_FORCE_EN | RTL931X_FORCE_LINK_EN);
+
+	if (state->duplex == DUPLEX_FULL)
+		reg |= RTL931X_DUPLEX_MODE;
+
+	if (state->link)
+		reg |= RTL931X_FORCE_LINK_EN;
+
+	reg |= RTL931X_FORCE_EN;
+
+	sw_w32(reg, priv->r->mac_force_mode_ctrl(port));
+}
+
 static void rtl93xx_phylink_mac_config(struct dsa_switch *ds, int port,
 					unsigned int mode,
 					const struct phylink_link_state *state)
@@ -594,25 +676,32 @@ static void rtl93xx_phylink_mac_config(struct dsa_switch *ds, int port,
 	int sds_num, sds_mode;
 	u32 reg;
 
-	pr_debug("%s port %d, mode %x, phy-mode: %s, speed %d, link %d\n", __func__,
+	pr_info("%s port %d, mode %x, phy-mode: %s, speed %d, link %d\n", __func__,
 		port, mode, phy_modes(state->interface), state->speed, state->link);
 
 	// Nothing to be done for the CPU-port
 	if (port == priv->cpu_port)
 		return;
 
+	if (priv->family_id == RTL9310_FAMILY_ID)
+		return rtl931x_phylink_mac_config(ds, port, mode, state);
+
+	pr_info("%s BEFORE mac_force_mode_ctrl %08x\n", __func__,
+		sw_r32(priv->r->mac_force_mode_ctrl(port)));
+	
 	reg = sw_r32(priv->r->mac_force_mode_ctrl(port));
 	reg &= ~(0xf << 3);
 
-	// On the RTL930X, ports 24 to 27 are using an internal SerDes
-	if (port >=24 && port <= 27) {
-		sds_num = port - 18; // Port 24 mapped to SerDes 6, 25 to 7 ...
+	if (priv->ports[port].phy_is_integrated) {
+		sds_num = priv->ports[port].sds_num;
+
 		switch (state->interface) {
 		case PHY_INTERFACE_MODE_HSGMII:
 			sds_mode = 0x12;
 			break;
 		case PHY_INTERFACE_MODE_1000BASEX:
-			sds_mode = 0x1b;  // 10G 1000X Auto
+//			sds_mode = 0x1b;  // 10G 1000X Auto
+			sds_mode = 0x1a;  // Use PHY_INTERFACE_MODE_10GKR for now
 			break;
 		case PHY_INTERFACE_MODE_XGMII:
 			sds_mode = 0x10;
@@ -620,7 +709,7 @@ static void rtl93xx_phylink_mac_config(struct dsa_switch *ds, int port,
 		case PHY_INTERFACE_MODE_10GKR:
 			sds_mode = 0x1a;
 			// We need to use media sel for fibre media:
-			reg |= BIT(16);
+//			reg |= BIT(16);
 			break;
 		case PHY_INTERFACE_MODE_USXGMII:
 			sds_mode = 0x0d;
@@ -655,10 +744,12 @@ static void rtl93xx_phylink_mac_config(struct dsa_switch *ds, int port,
 		reg |= FORCE_LINK_EN;
 
 	if (state->duplex == DUPLEX_FULL)
-			reg |= BIT(2);
+		reg |= RTL930X_DUPLEX_MODE;
 
-	reg |= 1; // Force Link up
+//	reg |= 1; // Force Link up MAC_FORCE_EN _not_ used by u-boot
 	sw_w32(reg, priv->r->mac_force_mode_ctrl(port));
+	pr_info("%s AFTER mac_force_mode_ctrl %08x\n", __func__,
+		sw_r32(priv->r->mac_force_mode_ctrl(port)));
 }
 
 static void rtl83xx_phylink_mac_link_down(struct dsa_switch *ds, int port,
@@ -680,6 +771,8 @@ static void rtl93xx_phylink_mac_link_down(struct dsa_switch *ds, int port,
 
 	// No longer force link
 	sw_w32_mask(3, 0, priv->r->mac_force_mode_ctrl(port));
+	pr_info("%s MAC_PORT_CTRL %08x CPU %08x\n", __func__,
+		sw_r32(priv->r->mac_port_ctrl(port)), sw_r32(priv->r->mac_port_ctrl(28)));
 }
 
 static void rtl83xx_phylink_mac_link_up(struct dsa_switch *ds, int port,
@@ -692,6 +785,8 @@ static void rtl83xx_phylink_mac_link_up(struct dsa_switch *ds, int port,
 	struct rtl838x_switch_priv *priv = ds->priv;
 	/* Restart TX/RX to port */
 	sw_w32_mask(0, 0x3, priv->r->mac_port_ctrl(port));
+	pr_info("%s MAC_PORT_CTRL %08x\n", __func__,
+		sw_r32(priv->r->mac_port_ctrl(port)), sw_r32(priv->r->mac_port_ctrl(28)));
 	// TODO: Set speed/duplex/pauses
 }
 

@@ -146,13 +146,43 @@
 #define RTL931X_MAC_RX_PAUSE_STS		(0x0F00)
 #define RTL930X_MAC_LINK_MEDIA_STS		(0xCB14)
 
-/* MAC link state bits */
+/* MAC link state bits TODO: replace by the ones below */
 #define FORCE_EN				(1 << 0)
 #define FORCE_LINK_EN				(1 << 1)
 #define NWAY_EN					(1 << 2)
 #define DUPLX_MODE				(1 << 3)
 #define TX_PAUSE_EN				(1 << 6)
 #define RX_PAUSE_EN				(1 << 7)
+
+/* MAC link state bits */
+#define RTL830X_FORCE_EN			(1 << 0)
+#define RTL830X_FORCE_LINK_EN			(1 << 1)
+#define RTL830X_NWAY_EN				(1 << 2)
+#define RTL830X_DUPLEX_MODE			(1 << 3)
+#define RTL830X_TX_PAUSE_EN			(1 << 6)
+#define RTL830X_RX_PAUSE_EN			(1 << 7)
+#define RTL830X_MAC_FORCE_FC_EN			(1 << 8)
+
+#define RTL839X_FORCE_EN			(1 << 0)
+#define RTL839X_FORCE_LINK_EN			(1 << 1)
+#define RTL839X_DUPLEX_MODE			(1 << 2)
+#define RTL839X_TX_PAUSE_EN			(1 << 5)
+#define RTL839X_RX_PAUSE_EN			(1 << 6)
+#define RTL839X_MAC_FORCE_FC_EN			(1 << 7)
+
+#define RTL930X_FORCE_EN			(1 << 0)
+#define RTL930X_FORCE_LINK_EN			(1 << 1)
+#define RTL930X_DUPLEX_MODE			(1 << 2)
+#define RTL930X_TX_PAUSE_EN			(1 << 7)
+#define RTL930X_RX_PAUSE_EN			(1 << 8)
+#define RTL930X_MAC_FORCE_FC_EN			(1 << 9)
+
+#define RTL931X_FORCE_EN			(1 << 9)
+#define RTL931X_FORCE_LINK_EN			(1 << 0)
+#define RTL931X_DUPLEX_MODE			(1 << 2)
+#define RTL931X_MAC_FORCE_FC_EN			(1 << 4)
+#define RTL931X_TX_PAUSE_EN			(1 << 16)
+#define RTL931X_RX_PAUSE_EN			(1 << 17)
 
 /* EEE */
 #define RTL838X_MAC_EEE_ABLTY			(0xa1a8)
@@ -433,6 +463,8 @@ enum phy_type {
 	PHY_RTL8218B_EXT = 3,
 	PHY_RTL8214FC = 4,
 	PHY_RTL839X_SDS = 5,
+	PHY_RTL930X_SDS = 6,
+	PHY_RTL931X_SDS = 7,
 };
 
 struct rtl838x_port {
@@ -441,9 +473,10 @@ struct rtl838x_port {
 	u16 pvid;
 	bool eee_enabled;
 	enum phy_type phy;
+	bool phy_is_integrated;
 	bool is10G;
 	bool is2G5;
-	u8 sds_num;
+	u32 sds_num;
 	const struct dsa_port *dp;
 };
 
