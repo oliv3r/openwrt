@@ -112,56 +112,56 @@
 	};
 
 	sfp0: sfp-p1 {
-		compatible = "sff,sfp"; // TODO: SFP+???
+		compatible = "sff,sfp";
 		i2c-bus = <&i2c01>;
 		los-gpio = <&pca9555_0 0 GPIO_ACTIVE_HIGH>;
 		tx-fault-gpio = <&pca9555_0 1 GPIO_ACTIVE_HIGH>;
 		mod-def0-gpio = <&pca9555_0 2 GPIO_ACTIVE_LOW>;
 	};
 	sfp1: sfp-p2 {
-		compatible = "sff,sfp"; // TODO: SFP+???
+		compatible = "sff,sfp";
 		i2c-bus = <&i2c02>;
 		los-gpio = <&pca9555_0 4 GPIO_ACTIVE_HIGH>;
 		tx-fault-gpio = <&pca9555_0 5 GPIO_ACTIVE_HIGH>;
 		mod-def0-gpio = <&pca9555_0 6 GPIO_ACTIVE_LOW>;
 	};
 	sfp2: sfp-p3 {
-		compatible = "sff,sfp"; // TODO: SFP+???
+		compatible = "sff,sfp";
 		i2c-bus = <&i2c03>;
 		los-gpio = <&pca9555_0 8 GPIO_ACTIVE_HIGH>;
 		tx-fault-gpio = <&pca9555_0 9 GPIO_ACTIVE_HIGH>;
 		mod-def0-gpio = <&pca9555_0 10 GPIO_ACTIVE_LOW>;
 	};
 	sfp3: sfp-p4 {
-		compatible = "sff,sfp"; // TODO: SFP+???
+		compatible = "sff,sfp";
 		i2c-bus = <&i2c04>;
 		los-gpio = <&pca9555_0 12 GPIO_ACTIVE_HIGH>;
 		tx-fault-gpio = <&pca9555_0 13 GPIO_ACTIVE_HIGH>;
 		mod-def0-gpio = <&pca9555_0 14 GPIO_ACTIVE_LOW>;
 	};
 	sfp4: sfp-p5 {
-		compatible = "sff,sfp"; // TODO: SFP+???
+		compatible = "sff,sfp";
 		i2c-bus = <&i2c05>;
 		los-gpio = <&pca9555_1 0 GPIO_ACTIVE_HIGH>;
 		tx-fault-gpio = <&pca9555_1 1 GPIO_ACTIVE_HIGH>;
 		mod-def0-gpio = <&pca9555_1 2 GPIO_ACTIVE_LOW>;
 	};
 	sfp5: sfp-p6 {
-		compatible = "sff,sfp"; // TODO: SFP+???
+		compatible = "sff,sfp";
 		i2c-bus = <&i2c06>;
 		los-gpio = <&pca9555_1 4 GPIO_ACTIVE_HIGH>;
 		tx-fault-gpio = <&pca9555_1 5 GPIO_ACTIVE_HIGH>;
 		mod-def0-gpio = <&pca9555_1 6 GPIO_ACTIVE_LOW>;
 	};
 	sfp6: sfp-p7 {
-		compatible = "sff,sfp"; // TODO: SFP+???
+		compatible = "sff,sfp";
 		i2c-bus = <&i2c07>;
 		los-gpio = <&pca9555_1 8 GPIO_ACTIVE_HIGH>;
 		tx-fault-gpio = <&pca9555_1 9 GPIO_ACTIVE_HIGH>;
 		mod-def0-gpio = <&pca9555_1 10 GPIO_ACTIVE_LOW>;
 	};
 	sfp7: sfp-p8 {
-		compatible = "sff,sfp"; // TODO: SFP+???
+		compatible = "sff,sfp";
 		i2c-bus = <&i2c08>;
 		los-gpio = <&pca9555_1 12 GPIO_ACTIVE_HIGH>;
 		tx-fault-gpio = <&pca9555_1 13 GPIO_ACTIVE_HIGH>;
@@ -289,55 +289,6 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-
-		port@0 {
-			reg = <0>;
-			label = "lan8";
-			phy-mode = "10gbase-kr";
-			phy-handle = <&phy0>;
-			sfp = <&sfp7>;
-
-			fixed-link {
-				managed;
-				in-band-status;
-				speed = <10000>;
-				full-duplex;
-				pause;
-			};
-
-		};
-		port@8 {
-			reg = <8>;
-			label = "lan7";
-			phy-mode = "10gbase-kr";
-			phy-handle = <&phy8>;
-			sfp = <&sfp6>;
-
-			fixed-link {
-				managed;
-				in-band-status;
-				speed = <10000>;
-				full-duplex;
-				pause;
-			};
-
-		};
-		port@16 {
-			reg = <16>;
-			label = "lan2";
-			phy-mode = "10gbase-kr";
-			phy-handle = <&phy16>;
-			sfp = <&sfp1>;
-
-			fixed-link {
-				managed;
-				in-band-status;
-				speed = <10000>;
-				full-duplex;
-				pause;
-			};
-
-		};
 		port@20 {
 			reg = <20>;
 			label = "lan1";
@@ -354,12 +305,13 @@
 			};
 
 		};
-		port@24 {
-			reg = <24>;
-			label = "lan4";
+
+		port@16 {
+			reg = <16>;
+			label = "lan2";
 			phy-mode = "10gbase-kr";
-			phy-handle = <&phy24>;
-			sfp = <&sfp3>;
+			phy-handle = <&phy16>;
+			sfp = <&sfp1>;
 
 			fixed-link {
 				managed;
@@ -370,6 +322,7 @@
 			};
 
 		};
+
 		port@25 {
 			reg = <25>;
 			label = "lan3";
@@ -386,6 +339,41 @@
 			};
 
 		};
+
+		port@24 {
+			reg = <24>;
+			label = "lan4";
+			phy-mode = "10gbase-kr";
+			phy-handle = <&phy24>;
+			sfp = <&sfp3>;
+
+			fixed-link {
+				managed;
+				in-band-status;
+				speed = <10000>;
+				full-duplex;
+				pause;
+			};
+
+		};
+
+		port@27 {
+			reg = <27>;
+			label = "lan5";
+			phy-mode = "10gbase-kr";
+			phy-handle = <&phy27>;
+			sfp = <&sfp4>;
+
+			fixed-link {
+				managed;
+				in-band-status;
+				speed = <10000>;
+				full-duplex;
+				pause;
+			};
+
+		};
+
 		port@26 {
 			reg = <26>;
 			label = "lan6";
@@ -402,12 +390,30 @@
 			};
 
 		};
-		port@27 {
-			reg = <27>;
-			label = "lan5";
+
+		port@8 {
+			reg = <8>;
+			label = "lan7";
 			phy-mode = "10gbase-kr";
-			phy-handle = <&phy27>;
-			sfp = <&sfp4>;
+			phy-handle = <&phy8>;
+			sfp = <&sfp6>;
+
+			fixed-link {
+				managed;
+				in-band-status;
+				speed = <10000>;
+				full-duplex;
+				pause;
+			};
+
+		};
+
+		port@0 {
+			reg = <0>;
+			label = "lan8";
+			phy-mode = "10gbase-kr";
+			phy-handle = <&phy0>;
+			sfp = <&sfp7>;
 
 			fixed-link {
 				managed;
