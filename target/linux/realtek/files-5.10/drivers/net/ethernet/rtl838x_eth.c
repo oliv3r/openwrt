@@ -2078,11 +2078,9 @@ static int rtl838x_mdio_init(struct rtl838x_eth_priv *priv)
 
 	}
 
-	pr_info("%s A\n", __func__);
 	snprintf(priv->mii_bus->id, MII_BUS_ID_SIZE, "%pOFn", mii_np);
 	ret = of_mdiobus_register(priv->mii_bus, mii_np);
 
-	pr_info("%s B ret %d\n", __func__, ret);
 err_put_node:
 	of_node_put(mii_np);
 	return ret;
@@ -2363,7 +2361,6 @@ static int __init rtl838x_eth_probe(struct platform_device *pdev)
 	if (err)
 		goto err_free;
 
-	pr_info("%s A\n", __func__);
 	err = register_netdev(dev);
 	if (err)
 		goto err_free;
@@ -2374,10 +2371,8 @@ static int __init rtl838x_eth_probe(struct platform_device *pdev)
 		netif_napi_add(dev, &priv->rx_qs[i].napi, rtl838x_poll_rx, 64);
 	}
 
-	pr_info("%s b\n", __func__);
 	platform_set_drvdata(pdev, dev);
 
-	pr_info("%s c\n", __func__);
 	phy_mode = PHY_INTERFACE_MODE_NA;
 	err = of_get_phy_mode(dn, &phy_mode);
 	if (err < 0) {
@@ -2388,7 +2383,6 @@ static int __init rtl838x_eth_probe(struct platform_device *pdev)
 	priv->phylink_config.dev = &dev->dev;
 	priv->phylink_config.type = PHYLINK_NETDEV;
 
-	pr_info("%s d\n", __func__);
 	phylink = phylink_create(&priv->phylink_config, pdev->dev.fwnode,
 				 phy_mode, &rtl838x_phylink_ops);
 	if (IS_ERR(phylink)) {
