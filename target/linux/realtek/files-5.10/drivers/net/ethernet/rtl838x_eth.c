@@ -1833,7 +1833,7 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 	// Mapping of port to phy-addresses on an SMI bus
 	poll_sel[0] = poll_sel[1] = 0;
 	for (i = 0; i < 28; i++) {
-		pr_debug("%s port %d: smi_addr %d, smi_bus %d\n",
+		pr_info("%s port %d: smi_addr %d, smi_bus %d\n",
 			__func__, i, priv->smi_addr[i], priv->smi_bus[i]);
 		pos = (i % 6) * 5;
 		sw_w32_mask(0x1f << pos, priv->smi_addr[i] << pos,
@@ -1852,9 +1852,9 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 		sw_r32(RTL930X_SMI_PORT0_15_POLLING_SEL), sw_r32(RTL930X_SMI_PORT16_27_POLLING_SEL));
 
 	// Configure which SMI bus is behind which port number
-/*	sw_w32(poll_sel[0], RTL930X_SMI_PORT0_15_POLLING_SEL);
+	sw_w32(poll_sel[0], RTL930X_SMI_PORT0_15_POLLING_SEL);
 	sw_w32(poll_sel[1], RTL930X_SMI_PORT16_27_POLLING_SEL);
-*/
+
 	pr_info("now: RTL930X_SMI_PORT0_15_POLLING_SEL: %08x, RTL930X_SMI_PORT0_15_POLLING_SEL: %08x\n",
 		sw_r32(RTL930X_SMI_PORT0_15_POLLING_SEL), sw_r32(RTL930X_SMI_PORT16_27_POLLING_SEL));
 
@@ -1864,9 +1864,10 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 	pr_info("RTL930X_SMI_GLB_CTRL ctrl: %08x\n", poll_ctrl);
 
 	// Configure which SMI busses are polled in c45 based on a c45 PHY being on that bus
-	for (i = 0; i < 4; i++)
+	for (i = 0; i < 4; i++) {
 		if (priv->smi_bus_isc45[i])
 			c45_mask |= BIT(i + 16);
+	}
 
 	pr_info("c45_mask: %08x\n", c45_mask);
 	sw_w32_mask(0, c45_mask, RTL930X_SMI_GLB_CTRL);
@@ -1924,8 +1925,10 @@ static int rtl931x_mdio_reset(struct mii_bus *bus)
 	}
 
 	// Configure which SMI busses
-	pr_info("%s: WAS RTL931X_MAC_L2_GLOBAL_CTRL2 %08x\n", __func__, sw_r32(RTL931X_MAC_L2_GLOBAL_CTRL2));
-	pr_info("c45_mask: %08x, RTL931X_SMI_GLB_CTRL0 was %X", c45_mask, sw_r32(RTL931X_SMI_GLB_CTRL0));
+	pr_info("%s: WAS RTL931X_MAC_L2_GLOBAL_CTRL2 %08x\n", __func__,
+		sw_r32(RTL931X_MAC_L2_GLOBAL_CTRL2));
+	pr_info("c45_mask: %08x, RTL931X_SMI_GLB_CTRL0 was %X", c45_mask,
+		sw_r32(RTL931X_SMI_GLB_CTRL0));
 	for (i = 0; i < 4; i++) {
 		// bus is polled in c45
 		if (priv->smi_bus_isc45[i])
@@ -2069,13 +2072,14 @@ static int rtl838x_mdio_init(struct rtl838x_eth_priv *priv)
 			pr_err("%s: illegal port number %d\n", __func__, pn);
 		}
 
-		if (of_device_is_compatible(dn, "ethernet-phy-ieee802.3-c45"))
-			priv->smi_bus_isc45[smi_addr[0]] = true;
-
 		if (of_property_read_bool(dn, "phy-is-integrated")) {
 			priv->phy_is_internal[pn] = true;
+			continue; // Internal PHYs do not use SMI
 		}
 
+		if (of_device_is_compatible(dn, "ethernet-phy-ieee802.3-c45")) {
+			priv->smi_bus_isc45[smi_addr[0]] = true;
+		}
 	}
 
 	snprintf(priv->mii_bus->id, MII_BUS_ID_SIZE, "%pOFn", mii_np);
