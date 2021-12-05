@@ -271,7 +271,7 @@
 		port@26 {
 			reg = <26>;
 			label = "lan11";
-			phy-mode = "10gbase-kr";
+			phy-mode = "10gbase-r";
 			phy-handle = <&phy26>;
 			sfp = <&sfp0>;
 
@@ -288,7 +288,7 @@
 		port@27 {
 			reg = <27>;
 			label = "lan12";
-			phy-mode = "10gbase-kr";
+			phy-mode = "10gbase-r";
 			phy-handle = <&phy27>;
 			sfp = <&sfp1>;
 

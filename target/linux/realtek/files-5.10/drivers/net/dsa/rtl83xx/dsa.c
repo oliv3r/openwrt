@@ -316,7 +316,7 @@ static void rtl93xx_phylink_validate(struct dsa_switch *ds, int port,
 	    state->interface != PHY_INTERFACE_MODE_QSGMII &&
 	    state->interface != PHY_INTERFACE_MODE_XGMII &&
 	    state->interface != PHY_INTERFACE_MODE_HSGMII &&
-	    state->interface != PHY_INTERFACE_MODE_10GKR &&
+	    state->interface != PHY_INTERFACE_MODE_10GBASER &&
 	    state->interface != PHY_INTERFACE_MODE_USXGMII &&
 	    state->interface != PHY_INTERFACE_MODE_INTERNAL &&
 	    state->interface != PHY_INTERFACE_MODE_SGMII) {
@@ -343,15 +343,26 @@ static void rtl93xx_phylink_validate(struct dsa_switch *ds, int port,
 	}
 
 	// Internal phys of the RTL93xx family provide 10G
-	if (priv->ports[port].phy_is_integrated) {
+	if (priv->ports[port].phy_is_integrated
+		&& state->interface == PHY_INTERFACE_MODE_1000BASEX) {
+		phylink_set(mask, 1000baseX_Full);
+	} else if (priv->ports[port].phy_is_integrated) {
 		phylink_set(mask, 1000baseX_Full);
 		phylink_set(mask, 10000baseKR_Full);
+		phylink_set(mask, 10000baseSR_Full);
+		phylink_set(mask, 10000baseCR_Full);
+	}
+	if (state->interface == PHY_INTERFACE_MODE_INTERNAL) {
+		phylink_set(mask, 1000baseX_Full);
+		phylink_set(mask, 1000baseT_Full);
+		phylink_set(mask, 10000baseKR_Full);
+		phylink_set(mask, 10000baseT_Full);
+		phylink_set(mask, 10000baseSR_Full);
+		phylink_set(mask, 10000baseCR_Full);
 	}
 
-	phylink_set(mask, 10baseT_Half);
-	phylink_set(mask, 10baseT_Full);
-	phylink_set(mask, 100baseT_Half);
-	phylink_set(mask, 100baseT_Full);
+	pr_info("%s supported %*pb \n", __func__, __ETHTOOL_LINK_MODE_MASK_NBITS, supported);
+	pr_info("%s mask      %*pb \n", __func__, __ETHTOOL_LINK_MODE_MASK_NBITS, mask);
 
 	bitmap_and(supported, supported, mask,
 		   __ETHTOOL_LINK_MODE_MASK_NBITS);
@@ -625,7 +636,7 @@ static void rtl931x_phylink_mac_config(struct dsa_switch *ds, int port,
 	case PHY_INTERFACE_MODE_XGMII:
 		sds_mode = 0x10;
 		break;
-	case PHY_INTERFACE_MODE_10GKR:
+	case PHY_INTERFACE_MODE_10GBASER:
 		sds_mode = 0x9f; // 10G 1000X Auto
 		ana_sds_mode = 0x39;
 		break;
@@ -700,16 +711,13 @@ static void rtl93xx_phylink_mac_config(struct dsa_switch *ds, int port,
 			sds_mode = 0x12;
 			break;
 		case PHY_INTERFACE_MODE_1000BASEX:
-//			sds_mode = 0x1b;  // 10G 1000X Auto
-			sds_mode = 0x1a;  // Use PHY_INTERFACE_MODE_10GKR for now
+			sds_mode = 0x04;
 			break;
 		case PHY_INTERFACE_MODE_XGMII:
 			sds_mode = 0x10;
 			break;
-		case PHY_INTERFACE_MODE_10GKR:
+		case PHY_INTERFACE_MODE_10GBASER:
 			sds_mode = 0x1a;
-			// We need to use media sel for fibre media:
-//			reg |= BIT(16);
 			break;
 		case PHY_INTERFACE_MODE_USXGMII:
 			sds_mode = 0x0d;
@@ -746,7 +754,8 @@ static void rtl93xx_phylink_mac_config(struct dsa_switch *ds, int port,
 	if (state->duplex == DUPLEX_FULL)
 		reg |= RTL930X_DUPLEX_MODE;
 
-//	reg |= 1; // Force Link up MAC_FORCE_EN _not_ used by u-boot
+	reg &= ~RTL930X_FORCE_EN; // Clear MAC_FORCE_EN to allow SDS-MAC link
+
 	sw_w32(reg, priv->r->mac_force_mode_ctrl(port));
 	pr_info("%s AFTER mac_force_mode_ctrl %08x\n", __func__,
 		sw_r32(priv->r->mac_force_mode_ctrl(port)));

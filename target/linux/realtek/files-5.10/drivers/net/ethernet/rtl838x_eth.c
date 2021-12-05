@@ -1430,6 +1430,8 @@ static void rtl838x_validate(struct phylink_config *config,
 	    state->interface != PHY_INTERFACE_MODE_GMII &&
 	    state->interface != PHY_INTERFACE_MODE_QSGMII &&
 	    state->interface != PHY_INTERFACE_MODE_INTERNAL &&
+	    state->interface != PHY_INTERFACE_MODE_USXGMII &&
+	    state->interface != PHY_INTERFACE_MODE_XGMII &&
 	    state->interface != PHY_INTERFACE_MODE_SGMII) {
 		bitmap_zero(supported, __ETHTOOL_LINK_MODE_MASK_NBITS);
 		pr_err("Unsupported interface: %d\n", state->interface);
@@ -1886,7 +1888,7 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 	pr_info("AFTER: RTL930X_SMI_MAC_TYPE_CTRL %08x\n", sw_r32(RTL930X_SMI_MAC_TYPE_CTRL));
 
 	// TODO: Set up RTL9300_SMI_10GPHY_POLLING_SEL_0_ADDR for Aquantia PHYs on 1250
-
+	
 	return 0;
 }
 
