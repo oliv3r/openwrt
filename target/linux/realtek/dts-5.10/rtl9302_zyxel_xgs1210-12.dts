@@ -26,16 +26,6 @@
 		clock-frequency = <100000>;
 	};
 
-	/* i2c of the left SFP cage: port 11
-	i2c0: i2c-gpio-0 {
-		compatible = "i2c-gpio";
-		sda-gpios = <&gpio0 9 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
-		scl-gpios = <&gpio0 8 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
-		i2c-gpio,delay-us = <2>;
-		#address-cells = <1>;
-		#size-cells = <0>;
-	}; */
-
 	sfp0: sfp-p11 {
 		compatible = "sff,sfp";
 		i2c-bus = <&i2c0>;
@@ -45,7 +35,7 @@
 		tx-disable-gpio = <&gpio0 11 GPIO_ACTIVE_HIGH>;
 	};
 
-	/* i2c of the right SFP cage: port 12
+	/* i2c of the right SFP cage: port 12 */
 	i2c1: i2c-gpio-1 {
 		compatible = "i2c-gpio";
 		sda-gpios = <&gpio0 24 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
@@ -62,7 +52,7 @@
 //		tx-fault-gpio = <&gpio0 28 GPIO_ACTIVE_HIGH>;
 		mod-def0-gpio = <&gpio0 16 GPIO_ACTIVE_LOW>;
 		tx-disable-gpio = <&gpio0 15 GPIO_ACTIVE_HIGH>;
-	};*/
+	};
 
 	// Reset-button: GPIO 22
 	keys {
@@ -284,7 +274,7 @@
 			};
 		};
 
-		/* SFP cages
+		/* SFP cages */
 		port@27 {
 			reg = <27>;
 			label = "lan12";
@@ -300,7 +290,7 @@
 				pause;
 			};
 
-		}; */
+		};
 
 		port@28 {
 			ethernet = <&ethernet0>;

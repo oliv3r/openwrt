@@ -2172,7 +2172,7 @@ int rtl9300_configure_serdes(struct phy_device *phydev)
 	sds_mode = (phy_mode == PHY_INTERFACE_MODE_10GBASER) ? 0x1a : 0x4;
 	// Maybe use dal_longan_sds_init
 
-	// ----> dal_longan_sds_v_set
+	// ----> dal_longan_sds_mode_set
 	phydev_info(phydev, "Configuring internal RTL9300 SERDES %d\n", sds_num);
 	/* Set default Medium to fibre */
 	v = rtl930x_read_sds_phy(sds_num, 0x1f, 11);
@@ -2188,7 +2188,7 @@ int rtl9300_configure_serdes(struct phy_device *phydev)
 	pr_info("%s: enabling link as speed 10G, link down\n", __func__);
 	v = sw_r32(RTL930X_MAC_FORCE_MODE_CTRL + 4 * phy_addr);
 	pr_info("%s, RTL930X_MAC_FORCE_MODE_CTRL : %08x\n", __func__, v);
-	v |= BIT(0);		// MAC enabled
+	v |= BIT(0);		// MAC enabled, makes link impossible
 	v &= ~(7 << 3);
 	if (phy_mode == PHY_INTERFACE_MODE_10GBASER)
 		v |= 4 << 3;  	// Speed = 10G, 1G is 2
