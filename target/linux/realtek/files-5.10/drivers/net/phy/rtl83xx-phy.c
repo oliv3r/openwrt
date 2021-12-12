@@ -2043,104 +2043,125 @@ int rtl9300_sds_clock_wait(int timeout)
 	return 1;
 }
 
-// dal_longan_sds_clk_routine
-void rtl9300_sds_clock_config(void)
+void rtl9300_serdes_mac_link_config(int sds, bool tx_normal, bool rx_normal)
 {
-	// Power down SDS
-	rtl9300_sds_field_w(2, 0x20, 0, 7, 6, 0x3);
-	rtl9300_sds_field_w(3, 0x20, 0, 7, 6, 0x3);
+	u32 v10, v1;
 
-	// Wait for clock on first 10GBit SerDes, timeout 2million mico seconds
-	if(!rtl9300_sds_clock_wait(2 * 1000)) {
-		rtl9300_sds_field_w(2, 0x20, 0, 7, 6, 0);
-		rtl9300_sds_field_w(3, 0x20, 0, 7, 6, 0);
-		pr_err("%s: unable to configure SerDes clock\n", __func__);
-		return;
+	v10 = rtl930x_read_sds_phy(sds, 6, 2); // 10GBit, page 6, reg 2
+	v1 = rtl930x_read_sds_phy(sds, 0, 0); // 1GBit, page 0, reg 0
+	pr_info("%s: registers before %08x %08x\n", __func__, v10, v1);
+
+	v10 &= ~(BIT(13) | BIT(14));
+	v1 &= ~(BIT(8) | BIT(9));
+
+	v10 |= rx_normal ? 0 : BIT(13);
+	v1 |= rx_normal ? 0 : BIT(9);
+
+	v10 |= tx_normal ? 0 : BIT(14);
+	v1 |= tx_normal ? 0 : BIT(8);
+
+	rtl930x_write_sds_phy(sds, 6, 2, v10);
+	rtl930x_write_sds_phy(sds, 0, 0, v1);
+
+	v10 = rtl930x_read_sds_phy(sds, 6, 2);
+	v1 = rtl930x_read_sds_phy(sds, 0, 0);
+	pr_info("%s: registers after %08x %08x\n", __func__, v10, v1);
+}
+
+// phy_mode = PHY_INTERFACE_MODE_10GBASER, sds_mode = 0x1a
+int rtl9300_serdes_setup(int sds_num, int phy_mode)
+{
+	u32 v;
+	int sds_mode;
+
+	switch (phy_mode) {
+	case PHY_INTERFACE_MODE_HSGMII:
+		sds_mode = 0x12;
+		break;
+	case PHY_INTERFACE_MODE_1000BASEX:
+		sds_mode = 0x04;
+		break;
+	case PHY_INTERFACE_MODE_XGMII:
+		sds_mode = 0x10;
+		break;
+	case PHY_INTERFACE_MODE_10GBASER:
+		sds_mode = 0x1a;
+		break;
+	case PHY_INTERFACE_MODE_USXGMII:
+		sds_mode = 0x0d;
+		break;
+	default:
+		pr_err("%s: unknown serdes mode: %s\n", __func__, phy_modes(phy_mode));
+		return -EINVAL;
 	}
 
-	rtl9300_sds_field_w(2, 0x20, 0x2, 11, 10, 0x1);
-	mdelay(10);
-	rtl9300_sds_field_w(2, 0x20, 0x2, 11, 10, 0x0);
-	mdelay(10);
-	rtl9300_sds_field_w(10, 0x20, 2, 11, 10, 0x1);
-	mdelay(10);
-	rtl9300_sds_field_w(10, 0x20, 2, 11, 10, 0x0);
-	mdelay(10);
-	rtl9300_sds_field_w(2, 0x1f, 15, 5, 4, 0x1);
-	mdelay(10);
-	rtl9300_sds_field_w(2, 0x20, 0x2, 11, 10, 0x3);
-	mdelay(10);
-	rtl9300_sds_field_w(10, 0x20, 0x2, 11, 10, 0x3);
-	mdelay(10);
+	// Maybe use dal_longan_sds_init
 
-	/* Turn up the clock to 320MHz */
-	rtl9300_sds_field_w(2, 0x2f, 23, 1, 0, 0x1);
-	rtl9300_sds_field_w(2, 0x2f, 29, 11, 2, 0x190);
-	rtl9300_sds_field_w(2, 0x2f, 30, 15, 6, 0x190);
-	rtl9300_sds_field_w(2, 0x2f, 31, 15, 8, 0x30);
-	rtl9300_sds_field_w(2, 0x2f, 29, 15, 14, 0x0);
-	rtl9300_sds_field_w(2, 0x2f, 26, 8, 8,  0x0);
+	// ----> dal_longan_sds_mode_set
+	pr_info("%s: Configuring RTL9300 SERDES %d, mode %02x\n", __func__, sds_num, sds_mode);
+	// Set default Medium to fibre ????
+	v = rtl930x_read_sds_phy(sds_num, 0x1f, 11);
+	if (v < 0) {
+		pr_err("Cannot access SerDes PHY %d\n", sds_num);
+		return -EINVAL;
+	}
+	pr_info("%s set medium: %08x\n", __func__, v);
+	v |= BIT(1);
+	rtl930x_write_sds_phy(sds_num, 0x1f, 11, v);
+	pr_info("%s set medium after: %08x\n", __func__, v);
 
-	/* Toggle CMU */
-	rtl9300_sds_field_w(2, 0x21, 11, 3, 3, 1);
-	rtl9300_sds_field_w(2, 0x21, 11, 2, 2, 0);
-	rtl9300_sds_field_w(2, 0x21, 11, 2, 2, 1);
-	rtl9300_sds_field_w(2, 0x21, 11, 3, 3, 0);
+	// Enable SerDes for configuration
+	rtl9300_sds_rst(sds_num, sds_mode);
 
-	mdelay(500);
+	// Configure link to MAC
+	rtl9300_serdes_mac_link_config(sds_num, true, true);
 
-	/* Reset ICG */
-	rtl9300_sds_field_w(2, 0x1f, 15, 5, 4, 0);
-	mdelay(10);
-	rtl9300_sds_field_w(2, 0x1f, 15, 5, 4, 1);
-	mdelay(10);
+	// Enable 1GBit PHY
+	v = rtl930x_read_sds_phy(sds_num, PHY_PAGE_2, PHY_CTRL_REG);
+	pr_info("%s 1gbit phy: %08x\n", __func__, v);
+	v &= ~BIT(PHY_POWER_BIT);
+	rtl930x_write_sds_phy(sds_num, PHY_PAGE_2, PHY_CTRL_REG, v);
+	pr_info("%s 1gbit phy enabled: %08x\n", __func__, v);
 
-	/* Turn down clock to 257MHz */
-	rtl9300_sds_field_w(2, 0x2f, 23, 1, 0, 0x0);
-	rtl9300_sds_field_w(2, 0x2f, 29, 11, 2, 0x1b8);
-	rtl9300_sds_field_w(2, 0x2f, 30, 15, 6, 0x1b8);
-	rtl9300_sds_field_w(2, 0x2f, 31, 15, 8, 0x35);
-	rtl9300_sds_field_w(2, 0x2f, 29, 15, 14, 0x1);
-	rtl9300_sds_field_w(2, 0x2f, 26, 8, 8,  0x1);
+	// Enable 10GBit PHY
+	v = rtl930x_read_sds_phy(sds_num, PHY_PAGE_4, PHY_CTRL_REG);
+	pr_info("%s 10gbit phy: %08x\n", __func__, v);
+	v &= ~BIT(PHY_POWER_BIT);
+	rtl930x_write_sds_phy(sds_num, PHY_PAGE_4, PHY_CTRL_REG, v);
+	pr_info("%s 10gbit phy after: %08x\n", __func__, v);
 
-	/* Toggle CMU again */
-	rtl9300_sds_field_w(2, 0x21, 11, 3, 3, 1);
-	rtl9300_sds_field_w(2, 0x21, 11, 2, 2, 0);
-	rtl9300_sds_field_w(2, 0x21, 11, 2, 2, 1);
-	rtl9300_sds_field_w(2, 0x21, 11, 3, 3, 0);
-	mdelay(500);
+	rtl9300_force_sds_mode(sds_num, PHY_INTERFACE_MODE_NA);
 
-	/* Reset ICG*/
-	rtl9300_sds_field_w(2, 0x1f, 15, 5, 4, 0);
-	mdelay(10);
+	// Do RX calibration
+	// Select rtl9300_rxCaliConf_serdes_myParam if SERDES
+	// otherwise rtl9300_rxCaliConf_phy_myParam
+//	rtl9300_do_rx_calibration(sds_num);
 
-	/*toggle ber-notify*/
-	rtl9300_sds_field_w(2, 0x20, 2, 13, 12, 0x1);
-	mdelay(10);
-	rtl9300_sds_field_w(2, 0x20, 2, 13, 12, 0x0);
-	mdelay(10);
-	rtl9300_sds_field_w(10, 0x20, 2, 13, 12, 0x1);
-	mdelay(10);
-	rtl9300_sds_field_w(10, 0x20, 2, 13, 12, 0x0);
-	mdelay(10);
+	rtl9300_sds_tx_config(sds_num, phy_mode);
 
-	/* Power up SerDes again */
-	rtl9300_sds_field_w(2, 0x20, 0, 7, 6, 0);
-	rtl9300_sds_field_w(3, 0x20, 0, 7, 6, 0);
+	rtl9300_force_sds_mode(sds_num, phy_mode);
 
-	rtl8218d_reset(8);
-	rtl8218d_reset(16);
+	// The clock needs only to be configured on the FPGA implementation
 
-	/* SerDes RX reset */
-	rtl9300_sds_field_w(2, 0x2e, 0x15, 4, 4, 0x1);
-	mdelay(10);
-	rtl9300_sds_field_w(2, 0x2e, 0x15, 4, 4, 0x0);
+	// <----- dal_longan_sds_mode_set
+	/* Set default Medium to fibre */
+// 	v = rtl930x_read_sds_phy(sds_num, 0x1f, 11);
+// 	if (v < 0) {
+// 		dev_err(dev, "Cannot access SerDes PHY %d\n", phy_addr);
+// 		return -EINVAL;
+// 	}
+// 	pr_info("%s set medium: %08x\n", __func__, v);
+// 	v |= BIT(2);
+// 	rtl930x_write_sds_phy(sds_num, 0x1f, 11, v);
+// 	pr_info("%s set medium after: %08x\n", __func__, v);
 
-	mdelay(10);
+	// TODO: this needs to be configurable via ethtool/.dts
+	pr_info("%s: setting 1/10G fibre medium, mode %02x\n", __func__, sds_mode);
+	rtl9300_sds_rst(sds_num, sds_mode);
 
-	rtl9300_sds_field_w(3, 0x2e, 0x15, 4, 4, 0x1);
-	mdelay(10);
-	rtl9300_sds_field_w(3, 0x2e, 0x15, 4, 4, 0x0);
+	// TODO: Apply patch set for fibre type
+
+	return 0;
 }
 
 int rtl9300_configure_serdes(struct phy_device *phydev)
@@ -2202,6 +2223,9 @@ int rtl9300_configure_serdes(struct phy_device *phydev)
 	// Enable SerDes for configuration
 	rtl9300_sds_rst(sds_num, sds_mode);
 
+	// Configure link to MAC
+	rtl9300_serdes_mac_link_config(sds_num, true, true);
+
 	// Enable 1GBit PHY
 	v = rtl930x_read_sds_phy(sds_num, PHY_PAGE_2, PHY_CTRL_REG);
 	pr_info("%s 1gbit phy: %08x\n", __func__, v);
@@ -2227,7 +2251,7 @@ int rtl9300_configure_serdes(struct phy_device *phydev)
 
 	rtl9300_force_sds_mode(sds_num, phy_mode);
 
-//	 rtl9300_sds_clock_config();
+	// The clock needs only to be configured on the FPGA implementation
 
 	// <----- dal_longan_sds_mode_set
 	/* Set default Medium to fibre */
@@ -2252,7 +2276,7 @@ int rtl9300_configure_serdes(struct phy_device *phydev)
 
 static int rtl9300_set_port(struct phy_device *phydev, int port)
 {
-	bool is_fibre = (port == PORT_FIBRE ? true : false);
+//	bool is_fibre = (port == PORT_FIBRE ? true : false);
 	int addr = phydev->mdio.addr;
 
 	pr_info("%s port %d to %d\n", __func__, addr, port);
@@ -2513,7 +2537,7 @@ static int rtl9300_serdes_probe(struct phy_device *phydev)
 {
 	struct device *dev = &phydev->mdio.dev;
 	struct rtl838x_phy_priv *priv;
-	int addr = phydev->mdio.addr;
+//	int addr = phydev->mdio.addr;
 
 	// TODO: Figure out a different way of detecting this, or use a generic
 	// detection function for RTL93xx

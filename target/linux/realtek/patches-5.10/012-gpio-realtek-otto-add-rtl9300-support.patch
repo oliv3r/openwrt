@@ -25,7 +25,7 @@ index c1193dd08fe0..fe2fc0ec0f55 100644
  	},
 +	{
 +		.compatible = "realtek,rtl9300-gpio",
-+		.data = (void *)(GPIO_PORTS_REVERSED | GPIO_INTERRUPTS_PER_CPU)
++		.data = (void *)(GPIO_PORTS_REVERSED)
 +	},
  	{}
  };

@@ -706,28 +706,11 @@ static void rtl93xx_phylink_mac_config(struct dsa_switch *ds, int port,
 	if (priv->ports[port].phy_is_integrated) {
 		sds_num = priv->ports[port].sds_num;
 
-		switch (state->interface) {
-		case PHY_INTERFACE_MODE_HSGMII:
-			sds_mode = 0x12;
-			break;
-		case PHY_INTERFACE_MODE_1000BASEX:
-			sds_mode = 0x04;
-			break;
-		case PHY_INTERFACE_MODE_XGMII:
-			sds_mode = 0x10;
-			break;
-		case PHY_INTERFACE_MODE_10GBASER:
-			sds_mode = 0x1a;
-			break;
-		case PHY_INTERFACE_MODE_USXGMII:
-			sds_mode = 0x0d;
-			break;
-		default:
-			pr_err("%s: unknown serdes mode: %s\n",
-			       __func__, phy_modes(state->interface));
-			return;
-		}
-		rtl9300_sds_rst(sds_num, sds_mode);
+		// Disable Link and Serdes
+		sw_w32_mask(0x2, 0x1, RTL930X_MAC_FORCE_MODE_CTRL + 4 * port);
+
+		// Configure SerDes
+		rtl9300_serdes_setup(sds_num, state->interface);
 	}
 
 	switch (state->speed) {

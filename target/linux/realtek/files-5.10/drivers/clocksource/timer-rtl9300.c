@@ -159,7 +159,7 @@ static int __init rtl9300_timer_init(struct device_node *node)
 	int err = 0;
 	unsigned long rate;
 
-	pr_info("%s: setting up timer\n", __func__);
+	pr_info("%s: setting up the timer\n", __func__);
 
 	err = timer_of_init(node, &t_of);
 	if (err)
