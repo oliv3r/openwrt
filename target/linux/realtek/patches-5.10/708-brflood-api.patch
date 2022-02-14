@@ -1,6 +1,6 @@
---- linux-5.10.59.old2/include/net/dsa.h	2021-08-17 21:27:20.953160439 +0700
-+++ linux-5.10.59/include/net/dsa.h	2021-08-17 21:31:54.189450536 +0700
-@@ -595,8 +595,14 @@ struct dsa_switch_ops {
+--- a/include/net/dsa.h
++++ b/include/net/dsa.h
+@@ -552,8 +552,14 @@ struct dsa_switch_ops {
  	void	(*port_stp_state_set)(struct dsa_switch *ds, int port,
  				      u8 state);
  	void	(*port_fast_age)(struct dsa_switch *ds, int port);
@@ -17,9 +17,9 @@
  
  	/*
  	 * VLAN support
---- linux-5.10.59.old2/net/dsa/dsa_priv.h	2021-08-17 21:27:47.645188920 +0700
-+++ linux-5.10.59/net/dsa/dsa_priv.h	2021-08-17 21:31:54.189450536 +0700
-@@ -184,11 +184,11 @@ int dsa_port_mdb_add(const struct dsa_po
+--- a/net/dsa/dsa_priv.h
++++ b/net/dsa/dsa_priv.h
+@@ -167,11 +167,11 @@ int dsa_port_mdb_add(const struct dsa_po
  int dsa_port_mdb_del(const struct dsa_port *dp,
  		     const struct switchdev_obj_port_mdb *mdb);
  int dsa_port_pre_bridge_flags(const struct dsa_port *dp, unsigned long flags,
@@ -34,8 +34,8 @@
  int dsa_port_vlan_add(struct dsa_port *dp,
  		      const struct switchdev_obj_port_vlan *vlan,
  		      struct switchdev_trans *trans);
---- linux-5.10.59.old2/net/dsa/port.c	2021-08-17 21:27:20.953160439 +0700
-+++ linux-5.10.59/net/dsa/port.c	2021-08-17 21:31:54.189450536 +0700
+--- a/net/dsa/port.c
++++ b/net/dsa/port.c
 @@ -145,7 +145,7 @@ int dsa_port_bridge_join(struct dsa_port
  	int err;
  
@@ -63,7 +63,7 @@
  
  	/* Port left the bridge, put in BR_STATE_DISABLED by the bridge layer,
  	 * so allow it to be in BR_STATE_FORWARDING to be kept functional
-@@ -412,44 +412,44 @@ int dsa_port_ageing_time(struct dsa_port
+@@ -333,44 +333,44 @@ int dsa_port_ageing_time(struct dsa_port
  }
  
  int dsa_port_pre_bridge_flags(const struct dsa_port *dp, unsigned long flags,
@@ -123,9 +123,9 @@
  }
  
  int dsa_port_mtu_change(struct dsa_port *dp, int new_mtu,
---- linux-5.10.59.old2/net/dsa/slave.c	2021-08-17 21:27:20.953160439 +0700
-+++ linux-5.10.59/net/dsa/slave.c	2021-08-17 21:31:54.189450536 +0700
-@@ -293,13 +293,13 @@ static int dsa_slave_port_attr_set(struc
+--- a/net/dsa/slave.c
++++ b/net/dsa/slave.c
+@@ -290,13 +290,13 @@ static int dsa_slave_port_attr_set(struc
  		break;
  	case SWITCHDEV_ATTR_ID_PORT_PRE_BRIDGE_FLAGS:
  		ret = dsa_port_pre_bridge_flags(dp, attr->u.brport_flags,

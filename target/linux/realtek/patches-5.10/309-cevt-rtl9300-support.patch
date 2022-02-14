@@ -1,6 +1,6 @@
 --- a/arch/mips/kernel/Makefile
 +++ b/arch/mips/kernel/Makefile
-@@ -27,6 +27,7 @@
+@@ -27,6 +27,7 @@ obj-$(CONFIG_CEVT_BCM1480)	+= cevt-bcm14
  obj-$(CONFIG_CEVT_R4K)		+= cevt-r4k.o
  obj-$(CONFIG_CEVT_DS1287)	+= cevt-ds1287.o
  obj-$(CONFIG_CEVT_GT641XX)	+= cevt-gt641xx.o
@@ -19,7 +19,7 @@
  extern spinlock_t rtc_lock;
  
  /*
-@@ -43,6 +45,11 @@
+@@ -43,6 +45,11 @@ extern int r4k_clockevent_init(void);
  
  static inline int mips_clockevent_init(void)
  {
@@ -33,7 +33,7 @@
  #else
 --- a/arch/mips/kernel/smp-mt.c
 +++ b/arch/mips/kernel/smp-mt.c
-@@ -108,12 +108,18 @@
+@@ -108,12 +108,18 @@ static void __init smvp_tc_init(unsigned
  static void vsmp_init_secondary(void)
  {
  	/* This is Malta specific: IPI,performance and timer interrupts */

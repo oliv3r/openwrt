@@ -688,7 +688,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
  };
  #define to_mii_bus(d) container_of(d, struct mii_bus, dev)
  
-@@ -1651,6 +1665,66 @@ static inline int __phy_package_read(str
+@@ -1651,6 +1668,66 @@ static inline int __phy_package_read(str
  	return __mdiobus_read(phydev->mdio.bus, shared->addr, regnum);
  }
  
@@ -755,7 +755,7 @@ Signed-off-by: Daniel Golle <daniel@makrotopia.org>
  static inline int phy_package_write(struct phy_device *phydev,
  				    u32 regnum, u16 val)
  {
-@@ -1673,6 +1747,72 @@ static inline int __phy_package_write(st
+@@ -1673,6 +1750,72 @@ static inline int __phy_package_write(st
  	return __mdiobus_write(phydev->mdio.bus, shared->addr, regnum, val);
  }
  

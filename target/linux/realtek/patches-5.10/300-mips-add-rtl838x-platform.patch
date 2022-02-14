@@ -1,6 +1,5 @@
-diff -urpN linux-5.10.72.old/arch/mips/Kbuild.platforms linux-5.10.72/arch/mips/Kbuild.platforms
---- linux-5.10.72.old/arch/mips/Kbuild.platforms	2021-10-20 00:53:01.998912517 +0700
-+++ linux-5.10.72/arch/mips/Kbuild.platforms	2021-10-20 00:53:33.474882883 +0700
+--- a/arch/mips/Kbuild.platforms
++++ b/arch/mips/Kbuild.platforms
 @@ -23,6 +23,7 @@ platform-$(CONFIG_PIC32MZDA)		+= pic32/
  platform-$(CONFIG_MACH_PISTACHIO)	+= pistachio/
  platform-$(CONFIG_RALINK)		+= ralink/
@@ -9,10 +8,9 @@ diff -urpN linux-5.10.72.old/arch/mips/Kbuild.platforms linux-5.10.72/arch/mips/
  platform-$(CONFIG_SGI_IP22)		+= sgi-ip22/
  platform-$(CONFIG_SGI_IP27)		+= sgi-ip27/
  platform-$(CONFIG_SGI_IP28)		+= sgi-ip22/
-diff -urpN linux-5.10.72.old/arch/mips/Kconfig linux-5.10.72/arch/mips/Kconfig
---- linux-5.10.72.old/arch/mips/Kconfig	2021-10-20 00:53:01.998912517 +0700
-+++ linux-5.10.72/arch/mips/Kconfig	2021-10-20 00:54:35.994824025 +0700
-@@ -1032,8 +1032,58 @@
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -1037,8 +1037,58 @@ config NLM_XLP_BOARD
  	  This board is based on Netlogic XLP Processor.
  	  Say Y here if you have a XLP based board.
  
@@ -71,7 +69,7 @@ diff -urpN linux-5.10.72.old/arch/mips/Kconfig linux-5.10.72/arch/mips/Kconfig
  source "arch/mips/alchemy/Kconfig"
  source "arch/mips/ath25/Kconfig"
  source "arch/mips/ath79/Kconfig"
-@@ -1095,6 +1143,9 @@
+@@ -1097,6 +1147,9 @@ config CEVT_GT641XX
  config CEVT_R4K
  	bool
  
