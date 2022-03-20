@@ -386,6 +386,7 @@ irqreturn_t rtl931x_switch_irq(int irq, void *dev_id)
 	struct dsa_switch *ds = dev_id;
 	u32 status = sw_r32(RTL931X_ISR_GLB_SRC_REG);
 	u64 ports = rtl839x_get_port_reg_le(RTL931X_ISR_PORT_LINK_STS_REG(0));
+	u32 sds;
 	int i;
 
 	/* Clear status */
@@ -403,6 +404,28 @@ irqreturn_t rtl931x_switch_irq(int irq, void *dev_id)
 			}
 		}
 	}
+
+	/* Handle SDS Errors */
+	sds = sw_r32(RTL931X_ISR_SERDES_ERR_REG);
+	if (sds) {
+		pr_warn("%s error on SDS: %08x\n", __func__, sds);
+		sw_w32(sds, RTL931X_ISR_SERDES_ERR_REG);
+	}
+
+	/* Handle SDS RX Idle */
+	sds = sw_r32(RTL931X_ISR_SERDES_RXIDLE_REG);
+	if (sds) {
+		pr_warn("%s RXIDLE on SDS: %08x\n", __func__, sds);
+		sw_w32(sds, RTL931X_ISR_SERDES_RXIDLE_REG);
+	}
+
+	/* Handle SDS PHY STS errors */
+	ports = rtl839x_get_port_reg_le(RTL931X_ISR_SERDES_UPD_PHY_STS_REG(0));
+	if (ports) {
+		pr_warn("%s SERDES_UPD_PHY_STS: %016llx\n", __func__, ports);
+		rtl931x_isr_serdes_upd_phy_sts(ports);
+	}
+
 	return IRQ_HANDLED;
 }
 
