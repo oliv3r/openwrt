@@ -1709,7 +1709,7 @@ static int rtl931x_mdio_read_paged(struct mii_bus *bus, int mii_id, u16 page, in
 	struct rtl838x_eth_priv *priv = bus->priv;
 
 	pr_debug("%s: In here, port %d\n", __func__, mii_id);
-	if (priv->sds_id[mii_id] >= 0 && mii_id >= 52) {
+	if (priv->phy_is_internal[mii_id]) {
 		v = rtl931x_read_sds_phy(priv->sds_id[mii_id], page, regnum);
 		if (v < 0) {
 			err = v;
@@ -1811,7 +1811,7 @@ static int rtl930x_mdio_write_paged(struct mii_bus *bus, int mii_id, u16 page,
 	struct rtl838x_eth_priv *priv = bus->priv;
 	int err;
 
-	if (priv->sds_id[mii_id] >= 0)
+	if (priv->phy_is_internal[mii_id])
 		return rtl930x_write_sds_phy(priv->sds_id[mii_id], page, regnum, value);
 
 	if (regnum & (MII_ADDR_C45 | MII_ADDR_C22_MMD))
@@ -1835,7 +1835,7 @@ static int rtl931x_mdio_write_paged(struct mii_bus *bus, int mii_id, u16 page,
 	struct rtl838x_eth_priv *priv = bus->priv;
 	int err;
 
-	if (priv->sds_id[mii_id] >= 0 && mii_id >= 52)
+	if (priv->phy_is_internal[mii_id])
 		return rtl931x_write_sds_phy(priv->sds_id[mii_id], page, regnum, value);
 
 	if (regnum & (MII_ADDR_C45 | MII_ADDR_C22_MMD)) {
