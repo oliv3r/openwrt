@@ -1,0 +1,95 @@
+--- a/drivers/usb/host/max3421-hcd.c
++++ n/drivers/usb/host/max3421-hcd.c
+@@ -61,7 +61,7 @@
+ #include <linux/spi/spi.h>
+ #include <linux/usb.h>
+ #include <linux/usb/hcd.h>
+-#include <linux/of.h>
++#include <linux/of_gpio.h>
+ 
+ #include <linux/platform_data/max3421-hcd.h>
+ 
+@@ -348,7 +348,7 @@
+ {
+ 	struct max3421_hcd *max3421_hcd = hcd_to_max3421(hcd);
+ 	struct spi_device *spi = to_spi_device(hcd->self.controller);
+-	struct spi_transfer transfer;
++	struct spi_transfer transfer[2];
+ 	struct spi_message msg;
+ 
+ 	memset(&transfer, 0, sizeof(transfer));
+@@ -359,14 +359,17 @@
+ 		(field(reg, MAX3421_SPI_REG_SHIFT) |
+ 		 field(MAX3421_SPI_DIR_RD, MAX3421_SPI_DIR_SHIFT));
+ 
+-	transfer.tx_buf = max3421_hcd->tx->data;
+-	transfer.rx_buf = max3421_hcd->rx->data;
+-	transfer.len = 2;
++	transfer[0].tx_buf = max3421_hcd->tx->data;
++	transfer[0].len = 1;
+ 
+-	spi_message_add_tail(&transfer, &msg);
++	transfer[1].rx_buf = max3421_hcd->rx->data;
++	transfer[1].len = 1;
++
++	spi_message_add_tail(&transfer[0], &msg);
++	spi_message_add_tail(&transfer[1], &msg);
+ 	spi_sync(spi, &msg);
+ 
+-	return max3421_hcd->rx->data[1];
++	return max3421_hcd->rx->data[0];
+ }
+ 
+ static void
+@@ -1379,10 +1382,10 @@
+ 	struct max3421_hcd *max3421_hcd = hcd_to_max3421(hcd);
+ 	int i, i_worked = 1;
+ 
+-	/* set full-duplex SPI mode, low-active interrupt pin: */
+-	spi_wr8(hcd, MAX3421_REG_PINCTL,
+-		(BIT(MAX3421_PINCTL_FDUPSPI_BIT) |	/* full-duplex */
+-		 BIT(MAX3421_PINCTL_INTLEVEL_BIT)));	/* low-active irq */
++	/* set full-duplex SPI mode, falling edge interrupt pin:
++		- clear MAX3421_PINCTL_INTLEVEL_BIT, MAX3421_PINCTL_POSINT_BIT,
++		  set only MAX3421_PINCTL_FDUPSPI_BIT */
++	spi_wr8(hcd, MAX3421_REG_PINCTL, BIT(MAX3421_PINCTL_FDUPSPI_BIT));
+ 
+ 	while (!kthread_should_stop()) {
+ 		max3421_hcd->rev = spi_rd8(hcd, MAX3421_REG_REVISION);
+@@ -1407,7 +1410,7 @@
+ 			set_current_state(TASK_INTERRUPTIBLE);
+ 			if (test_and_clear_bit(ENABLE_IRQ, &max3421_hcd->todo))
+ 				enable_irq(spi->irq);
+-			schedule();
++			schedule_timeout(1); // Needed for falling-edge trigger
+ 			__set_current_state(TASK_RUNNING);
+ 		}
+ 
+@@ -1850,6 +1853,18 @@
+ 			goto error;
+ 
+ 		spi->dev.platform_data = pdata;
++
++		pdata->reset_gpio = of_get_named_gpio(dev->of_node, "gpio-reset", 0);
++		pr_info("%s reset GPIO is %d\n", __func__, pdata->reset_gpio);
++		if (gpio_is_valid(pdata->reset_gpio)) {
++			retval = devm_gpio_request(dev, pdata->reset_gpio, "max3421-reset");
++			if (retval) {
++				dev_err(dev, "failed to request gpio %d\n", pdata->reset_gpio);
++				goto error;
++			}
++			gpio_direction_output(pdata->reset_gpio, 1);
++			msleep(10);
++		}
+ 	}
+ 
+ 	pdata = spi->dev.platform_data;
+@@ -1903,7 +1918,7 @@
+ 	}
+ 
+ 	retval = request_irq(spi->irq, max3421_irq_handler,
+-			     IRQF_TRIGGER_LOW, "max3421", hcd);
++			     IRQF_TRIGGER_FALLING, "max3421", hcd);
+ 	if (retval < 0) {
+ 		dev_err(&spi->dev, "failed to request irq %d\n", spi->irq);
+ 		goto error;
