@@ -157,7 +157,7 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		
-		/* External phy ARQ813 */
+		/* 8 External RTL8221D PHYs */
 		phy0: ethernet-phy@0 {
 			reg = <0>;
 			compatible = "ethernet-phy-ieee802.3-c45";
@@ -208,19 +208,37 @@
 		};
 
 		/* RTL9313 Internal Serdes */
+		// These do not actually exist, but are still wired
+		// and configured in order to not confuse the LED polling
 		phy52: ethernet-phy@8 {
 			compatible = "ethernet-phy-ieee802.3-c45";
 			phy-is-integrated;
 			reg = <52>;
-			rtl9300,smi-address = <2 0>;
+			rtl9300,smi-address = <2 1>;
 			sds = < 10 >;
 		};
 		phy53: ethernet-phy@9 {
 			compatible = "ethernet-phy-ieee802.3-c45";
 			phy-is-integrated;
 			reg = <53>;
-			rtl9300,smi-address = <3 0>;
+			rtl9300,smi-address = <3 1>;
 			sds = < 11 >;
+		};
+
+		// These 2 ports exist physically
+		phy54: ethernet-phy@10 {
+			compatible = "ethernet-phy-ieee802.3-c45";
+			phy-is-integrated;
+			reg = <54>;
+			rtl9300,smi-address = <2 0>;
+			sds = < 12 >;
+		};
+		phy55: ethernet-phy@11 {
+			compatible = "ethernet-phy-ieee802.3-c45";
+			phy-is-integrated;
+			reg = <55>;
+			rtl9300,smi-address = <3 0>;
+			sds = < 13 >;
 		};
 
 	};
@@ -235,35 +253,35 @@
 			reg = <0>;
 			label = "lan2";
 			phy-handle = <&phy0>;
-			phy-mode = "sgmii";
+			phy-mode = "hsgmii";
 			led-set = <0>;
 		};
 		port@8 {
 			reg = <8>;
 			label = "lan1";
 			phy-handle = <&phy1>;
-			phy-mode = "sgmii";
+			phy-mode = "hsgmii";
 			led-set = <0>;
 		};
 		port@16 {
 			reg = <16>;
 			label = "lan4";
 			phy-handle = <&phy2>;
-			phy-mode = "sgmii";
+			phy-mode = "hsgmii";
 			led-set = <0>;
 		};
 		port@24 {
 			reg = <24>;
 			label = "lan3";
 			phy-handle = <&phy3>;
-			phy-mode = "sgmii";
+			phy-mode = "hsgmii";
 			led-set = <0>;
 		};
 		port@32 {
 			reg = <32>;
 			label = "lan6";
 			phy-handle = <&phy4>;
-			phy-mode = "sgmii";
+			phy-mode = "hsgmii";
 			led-set = <0>;
 		};
 		port@40 {
@@ -289,35 +307,39 @@
 		};
 
 		/* RTL9313 Internal SerDes */
-		port@52 {
+		port@52 {  // Not physically present
 			reg = <52>;
 			label = "lan9";
-			phy-mode = "10gbase-r";
+			phy-mode = "1000base-x";
 			phy-handle = <&phy52>;
 			led-set = <0>;
-			sfp = <&sfp0>;
-			fixed-link {
-				managed;
-				in-band-status;
-				speed = <10000>;
-				full-duplex;
-				pause;
-			};
+			managed = "in-band-status";
 		};
-		port@53 {
+		port@53 {  // Not physically present
 			reg = <53>;
 			label = "lan10";
-			phy-mode = "10gbase-r";
+			phy-mode = "1000base-x";
 			phy-handle = <&phy53>;
 			led-set = <0>;
+			managed = "in-band-status";
+		};
+		port@54 {  // Left port
+			reg = <54>;
+			label = "lan11";
+			phy-mode = "10gbase-r";
+			phy-handle = <&phy54>;
+			sfp = <&sfp0>;
+			led-set = <0>;
+			managed = "in-band-status";
+		};
+		port@55 {  // Right port
+			reg = <55>;
+			label = "lan12";
+			phy-mode = "10gbase-r";
+			phy-handle = <&phy55>;
+			led-set = <0>;
 			sfp = <&sfp1>;
-			fixed-link {
-				managed;
-				in-band-status;
-				speed = <10000>;
-				full-duplex;
-				pause;
-			};
+			managed = "in-band-status";
 		};
 
 		/* CPU-Port */
