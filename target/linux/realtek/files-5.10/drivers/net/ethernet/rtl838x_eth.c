@@ -695,7 +695,7 @@ static void rtl838x_hw_reset(struct rtl838x_eth_priv *priv)
 		pr_err("%s: Unsupported family id: %d", __func__, priv->family_id);
 		break;
 	}
-	sw_w32(reset_mask, priv->r->rst_glb_ctrl);
+	sw_w32_mask(0, reset_mask, priv->r->rst_glb_ctrl);
 
 	do { /* Wait for reset of NIC and Queues done */
 		udelay(20);
