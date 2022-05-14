@@ -23,6 +23,7 @@
 #include <asm/time.h>
 #include <asm/prom.h>
 #include <asm/smp-ops.h>
+#include <asm/reboot.h>
 
 #include "mach-rtl83xx.h"
 
