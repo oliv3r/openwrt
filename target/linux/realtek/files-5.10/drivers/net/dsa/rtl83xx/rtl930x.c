@@ -1100,14 +1100,40 @@ int rtl930x_eee_port_ability(struct rtl838x_switch_priv *priv, struct ethtool_ee
 
 	a = sw_r32(RTL930X_MAC_EEE_ABLTY);
 	a = sw_r32(RTL930X_MAC_EEE_ABLTY);
-	pr_info("Link partner: %08x\n", a);
+	pr_info("Link partner negotiated result: %08x\n", a);
 	if (a & BIT(port)) {
-		e->lp_advertised = ADVERTISED_100baseT_Full;
-		e->lp_advertised |= ADVERTISED_1000baseT_Full;
-		if (priv->ports[port].is2G5)
-			e->lp_advertised |= ADVERTISED_2500baseX_Full;
-		if (priv->ports[port].is10G)
-			e->lp_advertised |= ADVERTISED_10000baseT_Full;
+		int speed = priv->r->mac_link_spd_sts(port);
+		u32 v = 0;
+
+		switch (speed) {
+		case RTL930X_MAC_LINK_SPD_STS_10G:
+			v = sw_r32(RTL930X_EEE_TX_MINIFG_CTRL1) >> 16;
+			break;
+		case RTL930X_MAC_LINK_SPD_STS_5G:
+			v = sw_r32(RTL930X_EEE_TX_MINIFG_CTRL2) >> 16;
+			break;
+		case RTL930X_MAC_LINK_SPD_STS_2G5_ALT: fallthrough;
+		case RTL930X_MAC_LINK_SPD_STS_2G5:
+			v = sw_r32(RTL930X_EEE_TX_MINIFG_CTRL2) & 0xffff;
+			break;
+		case RTL930X_MAC_LINK_SPD_STS_1000M_ALT: fallthrough;
+		case RTL930X_MAC_LINK_SPD_STS_1000M:
+			v = sw_r32(RTL930X_EEE_TX_MINIFG_CTRL1) & 0xffff;
+			break;
+		case RTL930X_MAC_LINK_SPD_STS_100M:
+			v = sw_r32(RTL930X_EEE_TX_MINIFG_CTRL0) & 0xffff;
+			break;
+		case RTL930X_MAC_LINK_SPD_STS_10M:
+			/* EEE is not relevant for 10M */
+			break;
+		default:
+			pr_warn("%s: Unsupported speed: %d\n", __func__, speed);
+			break;
+		}
+		e->tx_lpi_timer = v;
+
+		if (v)
+			e->tx_lpi_enabled = true;
 	}
 
 	// Read 2x to clear latched state

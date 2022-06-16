@@ -1006,6 +1006,7 @@ void rtl839x_port_eee_set(struct rtl838x_switch_priv *priv, int port, bool enabl
  */
 int rtl839x_eee_port_ability(struct rtl838x_switch_priv *priv, struct ethtool_eee *e, int port)
 {
+	bool lp_active;
 	u32 reg;
 	u64 a;
 
@@ -1023,11 +1024,34 @@ int rtl839x_eee_port_ability(struct rtl838x_switch_priv *priv, struct ethtool_ee
 		e->advertised |= ADVERTISED_1000baseT_Full;
 
 	a = rtl839x_get_port_reg_le(RTL839X_MAC_EEE_ABLTY);
-	pr_info("Link partner: %016llx\n", a);
-	if (rtl839x_get_port_reg_le(RTL839X_MAC_EEE_ABLTY) & BIT_ULL(port)) {
-		e->lp_advertised = ADVERTISED_100baseT_Full;
-		e->lp_advertised |= ADVERTISED_1000baseT_Full;
-		return 1;
+	pr_debug("Link partner EEE negotiation result: %016llx\n", a);
+	lp_active = !!(a & BIT_ULL(port));
+
+	if (lp_active) {
+		int speed = priv->r->mac_link_spd_sts(port);
+		u32 v = 0;
+
+		switch(speed) {
+		case RTL839X_MAC_LINK_SPD_STS_10G:
+			v = sw_r32(RTL839X_EEE_TX_SEL_CTRL1) & 0xffff;
+			break;
+		case RTL839X_MAC_LINK_SPD_STS_1000M:
+			v = sw_r32(RTL839X_EEE_TX_SEL_CTRL1) & 0xffff;
+			break;
+		case RTL839X_MAC_LINK_SPD_STS_100M:
+			v = sw_r32(RTL839X_EEE_TX_SEL_CTRL0) >> 16;
+			break;
+		case RTL839X_MAC_LINK_SPD_STS_10M:
+			/* EEE is not relevant for 10M */
+			break;
+		default:
+			pr_warn("%s: Unsupported speed: %d\n", __func__, speed);
+			break;
+		}
+		e->tx_lpi_timer = v;
+
+		if (v)
+			e->tx_lpi_enabled = true;
 	}
 
 	return 0;
