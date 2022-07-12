@@ -160,7 +160,7 @@ u8  rtl9300_sds_lsb[]  = { 0, 6, 12, 18, 0, 6, 12, 18, 0, 6, 0, 6};
  */
 void rtl9300_sds_rst(int sds_num, u32 mode)
 {
-	pr_info("%s %d\n", __func__, mode);
+	pr_info("%s SDS %d to mode 0x%x\n", __func__, sds_num, mode);
 	if (sds_num < 0 || sds_num > 11) {
 		pr_err("Wrong SerDes number: %d\n", sds_num);
 		return;
@@ -190,7 +190,7 @@ void rtl9300_sds_set(int sds_num, u32 mode)
 		    rtl9300_sds_regs[sds_num]);
 	mdelay(10);
 
-	pr_debug("%s: 194:%08x 198:%08x 2a0:%08x 2a4:%08x\n", __func__,
+	pr_info("%s: 194:%08x 198:%08x 2a0:%08x 2a4:%08x\n", __func__,
 		sw_r32(0x194), sw_r32(0x198), sw_r32(0x2a0), sw_r32(0x2a4));
 }
 
@@ -246,6 +246,8 @@ int rtl839x_read_sds_phy(int phy_addr, int phy_reg)
 		val = (val >> 16) & 0xffff;
 	else
 		val &= 0xffff;
+
+	pr_info("%s: phy_addr %d phy_reg: %d, read %x\n", __func__, phy_addr, phy_reg, val);
 	return val;
 }
 
@@ -1658,7 +1660,7 @@ static int rtl9300_read_status(struct phy_device *phydev)
 		latch_status |= rtl9300_sds_field_r(sds_num, 0x1, 30, 8, 0);
 	}
 
-	pr_info("%s link status: status: %d, latch %d\n", __func__, status, latch_status);
+	pr_debug("%s link status: status: %d, latch %d\n", __func__, status, latch_status);
 
 	if (latch_status) {
 		phydev->link = true;
@@ -1697,8 +1699,7 @@ void rtl9300_force_sds_mode(int sds, phy_interface_t phy_if)
 	u32 v, cr_0, cr_1, cr_2;
 	u32 m_bit, l_bit;
 
-	pr_info("%s --------------------- serdes %d forcing to %x ...\n", __func__, sds, sds_mode);
-	pr_info("%s: SDS: %d, mode %d\n", __func__, sds, phy_if);
+	pr_info("%s: SDS: %d, PHY mode %d\n", __func__, sds, phy_if);
 	switch (phy_if) {
 	case PHY_INTERFACE_MODE_SGMII:
 		sds_mode = 0x2;
@@ -1740,15 +1741,13 @@ void rtl9300_force_sds_mode(int sds, phy_interface_t phy_if)
 		return;
 	}
 
-	pr_info("%s: SDS mode %x\n", __func__, sds_mode);
+	pr_info("%s: forcing SDS mode %x\n", __func__, sds_mode);
+
 	// Power down SerDes
 	rtl9300_sds_field_w(sds, 0x20, 0, 7, 6, 0x3);
-	if (sds == 5) pr_info("%s after %x\n", __func__, rtl930x_read_sds_phy(sds, 0x20, 0));
 
-	if (sds == 5) pr_info("%s a %x\n", __func__, rtl930x_read_sds_phy(sds, 0x1f, 9));
 	// Force mode enable
 	rtl9300_sds_field_w(sds, 0x1f, 9, 6, 6, 0x1);
-	if (sds == 5) pr_info("%s b %x\n", __func__, rtl930x_read_sds_phy(sds, 0x1f, 9));
 
 	/* SerDes off */
 	rtl9300_sds_field_w(sds, 0x1f, 9, 11, 7, 0x1f);
@@ -1756,7 +1755,6 @@ void rtl9300_force_sds_mode(int sds, phy_interface_t phy_if)
 	if (phy_if == PHY_INTERFACE_MODE_NA)
 		return;
 
-	if (sds == 5) pr_info("%s c %x\n", __func__, rtl930x_read_sds_phy(sds, 0x20, 18));
 	// Enable LC and ring
 	rtl9300_sds_field_w(lane_0, 0x20, 18, 3, 0, 0xf);
 
@@ -1790,6 +1788,7 @@ void rtl9300_force_sds_mode(int sds, phy_interface_t phy_if)
 	for (i = 0; i < 20; i++) {
 		mdelay(200);
 
+		pr_info("%s toggling LC or Ring for 10gr, round %d\n", __func__, i);
 		rtl930x_write_sds_phy(lane_0, 0x1f, 2, 53);
 
 		m_bit = (lane_0 == sds) ? (4) : (5);
@@ -1843,8 +1842,9 @@ void rtl9300_force_sds_mode(int sds, phy_interface_t phy_if)
 
 	// Re-enable power
 	rtl9300_sds_field_w(sds, 0x20, 0, 7, 6, 0);
+	pr_info("%s end power 0x20 0 %x\n", __func__, rtl930x_read_sds_phy(sds, 0x20, 0));
 
-	pr_info("%s --------------------- serdes %d forced to %x DONE\n", __func__, sds, sds_mode);
+	pr_info("%s -------------------- serdes %d forced to %x DONE\n", __func__, sds, sds_mode);
 }
 
 void rtl9300_sds_tx_config(int sds, phy_interface_t phy_if)
@@ -1874,6 +1874,8 @@ void rtl9300_sds_tx_config(int sds, phy_interface_t phy_if)
 		return;
 	}
 
+	pr_info("%s SerDes %d, pre-amp enable %d, pre-amp val %d, main-amp %d, post-amp enable %d, post-amp val %d, impedance %d\n",
+		__func__, sds, pre_en, pre_amp, main_amp, post_en, post_amp, impedance);
 	rtl9300_sds_field_w(sds, page, 0x1, 15, 11, pre_amp);
 	rtl9300_sds_field_w(sds, page, 0x7, 0, 0, pre_en);
 	rtl9300_sds_field_w(sds, page, 0x7, 8, 4, main_amp);
@@ -2332,7 +2334,7 @@ void rtl9300_do_rx_calibration_1(int sds, phy_interface_t phy_mode)
 	int tap0_init_val       = 0x1f; // Initial Decision Fed Equalizer 0 tap
 	int vth_min             = 0x0;
 
-	pr_info("start_1.1.1 initial value for sds %d\n", sds);
+	pr_debug("Doing calibration step 1.1.x for sds %d\n", sds);
 	rtl930x_write_sds_phy(sds, 6,  0, 0);
 
 	// FGCAL
@@ -2373,15 +2375,7 @@ void rtl9300_do_rx_calibration_1(int sds, phy_interface_t phy_mode)
 	rtl9300_sds_field_w(sds, 0x2e, 0x13, 2, 0, 0x7);
 	rtl9300_sds_field_w(sds, 0x2f, 0x0b, 5, 3, vth_min);
 
-	pr_info("end_1.1.1 --\n");
-
-	pr_info("start_1.1.2 Load DFE init. value\n");
-
 	rtl9300_sds_field_w(sds, 0x2e, 0x0f, 13, 7, 0x7f);
-
-	pr_info("end_1.1.2\n");
-
-	pr_info("start_1.1.3 disable LEQ training,enable DFE clock\n");
 
 	rtl9300_sds_field_w(sds, 0x2e, 0x17, 7, 7, 0x0);
 	rtl9300_sds_field_w(sds, 0x2e, 0x17, 6, 2, 0x0);
@@ -2390,15 +2384,7 @@ void rtl9300_do_rx_calibration_1(int sds, phy_interface_t phy_mode)
 	rtl9300_sds_field_w(sds, 0x2e, 0x12, 14, 14, 0x0);
 	rtl9300_sds_field_w(sds, 0x2f, 0x02, 15, 15, 0x0);
 
-	pr_info("end_1.1.3 --\n");
-
-	pr_info("start_1.1.4 offset cali setting\n");
-
 	rtl9300_sds_field_w(sds, 0x2e, 0x0f, 15, 14, 0x3);
-
-	pr_info("end_1.1.4\n");
-
-	pr_info("start_1.1.5 LEQ and DFE setting\n");
 
 	// TODO: make this work for DAC cables of different lengths
 	// For a 10GBit serdes wit Fibre, SDS 8 or 9
@@ -2415,8 +2401,6 @@ void rtl9300_do_rx_calibration_1(int sds, phy_interface_t phy_mode)
 	rtl9300_sds_field_w(sds, 0x2e, 0x19, 9, 5, 0x1f);
 	rtl9300_sds_field_w(sds, 0x2f, 0x0b, 15, 9, 0x3c);
 	rtl9300_sds_field_w(sds, 0x2e, 0x0b, 1, 0, 0x3);
-
-	pr_info("end_1.1.5\n");
 }
 
 void rtl9300_do_rx_calibration_2_1(u32 sds_num)
@@ -3025,7 +3009,7 @@ int rtl9300_configure_serdes(struct phy_device *phydev)
 	mdelay(20);
 
 	// ----> dal_longan_sds_mode_set
-	pr_info("%s: Configuring RTL9300 SERDES %d, mode %02x\n", __func__, sds_num, sds_mode);
+	pr_info("%s: Configuring RTL9300 SERDES %d\n", __func__, sds_num);
 
 	// Configure link to MAC
 	rtl9300_serdes_mac_link_config(sds_num, true, true);	// MAC Construct
@@ -3049,7 +3033,7 @@ int rtl9300_configure_serdes(struct phy_device *phydev)
 	} while (rtl9300_sds_check_calibration(sds_num, phy_mode) && calib_tries < 3);
 
 	if (calib_tries >= 3)
-		pr_err("%s CALIBTRATION FAILED\n", __func__);
+		pr_err("%s CALIBRATION FAILED\n", __func__);
 
 	rtl9300_sds_tx_config(sds_num, phy_mode);
 
