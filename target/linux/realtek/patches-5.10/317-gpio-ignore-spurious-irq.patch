@@ -1,0 +1,12 @@
+--- a/drivers/gpio/gpio-realtek-otto.c
++++ b/drivers/gpio/gpio-realtek-otto.c
+@@ -251,7 +251,8 @@
+ 		port_pin_count = min(gc->ngpio - lines_done, 8U);
+ 		for_each_set_bit(offset, &status, port_pin_count) {
+ 			irq = irq_find_mapping(gc->irq.domain, offset + lines_done);
+-			generic_handle_irq(irq);
++			if (irq)
++				generic_handle_irq(irq);
+ 		}
+ 	}
+ 
