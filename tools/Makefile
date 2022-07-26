@@ -37,6 +37,7 @@ tools-y += \
 	firmware-utils \
 	flex \
 	gengetopt \
+	libdeflate \
 	libressl \
 	libtool \
 	lzma \
