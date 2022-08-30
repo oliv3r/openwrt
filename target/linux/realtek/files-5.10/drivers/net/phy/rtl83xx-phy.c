@@ -338,7 +338,7 @@ int rtl931x_write_sds_phy(int phy_addr, int page, int phy_reg, u16 v)
 	sw_w32(cmd, RTL931X_SERDES_INDRT_ACCESS_CTRL);
 
 	sw_w32(v, RTL931X_SERDES_INDRT_DATA_CTRL);
-		
+
 	cmd =  sw_r32(RTL931X_SERDES_INDRT_ACCESS_CTRL) | 0x3;
 	sw_w32(cmd, RTL931X_SERDES_INDRT_ACCESS_CTRL);
 
@@ -2964,8 +2964,7 @@ sds_config rtl9300_a_sds_xsgmii_rtl8218d_lane1[] = {
  * Configuration parameters for 'even' Serdes in 10GR mode without
  * additional PHY
  */
-sds_config rtl9300_a_sds_10gr_lane0[] =
-{
+sds_config rtl9300_a_sds_10gr_lane0[] = {
 	/*1G*/
 	{0x00, 0x0E, 0x3053}, {0x01, 0x14, 0x0100}, {0x21, 0x03, 0x8206},
 	{0x21, 0x05, 0x40B0}, {0x21, 0x06, 0x0010}, {0x21, 0x07, 0xF09F},
@@ -3016,8 +3015,7 @@ sds_config rtl9300_a_sds_10gr_lane0[] =
  * Configuration parameters for 'odd' Serdes in 10GR mode without
  * additional PHY
  */
-sds_config rtl9300_a_sds_10gr_lane1[] =
-{
+sds_config rtl9300_a_sds_10gr_lane1[] = {
 	/*1G*/
 	{0x00, 0x0E, 0x3053}, {0x01, 0x14, 0x0100}, {0x21, 0x03, 0x8206},
 	{0x21, 0x06, 0x0010}, {0x21, 0x07, 0xF09F}, {0x21, 0x0A, 0x0003},
@@ -3821,7 +3819,7 @@ static void rtl931x_sds_rst(u32 sds)
 	int shift = ((sds & 0x3) << 3);
 
 	// TODO: We need to lock this!
-	
+
 	o = sw_r32(RTL931X_PS_SERDES_OFF_MODE_CTRL_ADDR);
 	v = o | BIT(sds);
 	sw_w32(v, RTL931X_PS_SERDES_OFF_MODE_CTRL_ADDR);
@@ -4350,7 +4348,7 @@ int rtl931x_sds_cmu_band_set(int sds, bool enable, u32 band, phy_interface_t mod
 		rtl9310_sds_field_w(asds, page, 0x7, 13, 13, 0);
 		rtl9310_sds_field_w(asds, page, 0x7, 11, 11, 0);
 	}
-		
+
 	rtl9310_sds_field_w(asds, page, 0x7, 4, 0, band);
 
 	rtl931x_sds_rst(sds);
