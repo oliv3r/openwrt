@@ -437,8 +437,16 @@
 		};
 	};
 
-	memory@0 {
-		device_type = "memory";
-		reg = <0x0 0x8000000>;
+	sram0: sram@9f000000 {
+		compatible = "mmio-sram";
+		reg = <0x9f000000 0x10000>; /* 64 kiB */
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0 0x9f000000 0x10000>;
+
+		pll-reclock-sram@0 {
+			reg = <0x0 0x20>; /* 32 bytes */
+			pool;
+		};
 	};
 };
