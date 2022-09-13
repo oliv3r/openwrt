@@ -29,8 +29,6 @@ rtcl_838x_dram_start:
 .ent	rtcl_838x_dram_set_rate
 rtcl_838x_dram_set_rate:
 
-#ifdef CONFIG_RTL838X
-
 	li	rCTR, RTL_SW_CORE_BASE
 	addiu	rGLB, rCTR, RTL838X_PLL_GLB_CTRL
 	ori	rTMP, $0, CLK_CPU
@@ -131,13 +129,6 @@ wait_cpu:
 	sync
 	jr	$ra
 	nop
-
-#else /* !CONFIG_RTL838X */
-
-	jr	$ra
-	nop
-
-#endif
 
 .end	rtcl_838x_dram_set_rate
 
