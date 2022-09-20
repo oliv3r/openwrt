@@ -1,0 +1,5 @@
+#
+# Realtek 'RTL' Otto SoC's (RTL83xx RTL93xx)
+#
+cflags-$(CONFIG_REALTEK_OTTO) += -I$(srctree)/arch/mips/include/asm/mach-rtl-otto/
+load-$(CONFIG_REALTEK_OTTO)   += 0xffffffff80000000

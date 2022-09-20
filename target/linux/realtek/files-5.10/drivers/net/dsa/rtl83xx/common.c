@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
+#include <asm/mach-rtl-otto/rtl83xx.h>
 #include <linux/of_mdio.h>
 #include <linux/of_platform.h>
 #include <net/arp.h>
@@ -10,7 +11,6 @@
 #include <linux/rhashtable.h>
 #include <linux/of_net.h>
 
-#include <asm/mach-rtl838x/mach-rtl83xx.h>
 #include "rtl83xx.h"
 
 extern struct rtl83xx_soc_info soc_info;

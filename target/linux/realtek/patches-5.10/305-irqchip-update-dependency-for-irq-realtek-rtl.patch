@@ -19,4 +19,4 @@ Submitted-by: INAGAKI Hiroshi <musashino.open@gmail.com>
  obj-$(CONFIG_MST_IRQ)			+= irq-mst-intc.o
  obj-$(CONFIG_SL28CPLD_INTC)		+= irq-sl28cpld.o
 -obj-$(CONFIG_MACH_REALTEK_RTL)		+= irq-realtek-rtl.o
-+obj-$(CONFIG_RTL83XX)			+= irq-realtek-rtl.o
++obj-$(CONFIG_REALTEK_OTTO)		+= irq-realtek-rtl.o

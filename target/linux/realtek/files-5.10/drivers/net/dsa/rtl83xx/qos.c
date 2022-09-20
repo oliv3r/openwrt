@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
+#include <asm/mach-rtl-otto/rtl83xx.h>
 #include <net/dsa.h>
 #include <linux/delay.h>
 
-#include <asm/mach-rtl838x/mach-rtl83xx.h>
 #include "rtl83xx.h"
 
 static struct rtl838x_switch_priv *switch_priv;

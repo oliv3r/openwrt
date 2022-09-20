@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
+#include <asm/mach-rtl-otto/rtl83xx.h>
 #include <net/dsa.h>
 #include <linux/delay.h>
 #include <linux/netdevice.h>
 #include <net/flow_offload.h>
 #include <linux/rhashtable.h>
 
-#include <asm/mach-rtl838x/mach-rtl83xx.h>
 #include "rtl83xx.h"
 #include "rtl838x.h"
 

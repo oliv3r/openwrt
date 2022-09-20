@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 
+#include <asm/mach-rtl-otto/rtl83xx.h>
 #include <linux/clockchips.h>
 #include <linux/init.h>
 #include <asm/time.h>
@@ -8,8 +9,6 @@
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
 #include <linux/sched_clock.h>
-
-#include <mach-rtl83xx.h>
 
 /*
  * Timer registers
