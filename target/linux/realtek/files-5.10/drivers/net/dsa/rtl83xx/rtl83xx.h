@@ -4,6 +4,8 @@
 #define _NET_DSA_RTL83XX_H
 
 #include <linux/bitops.h>
+#include <linux/phylink.h>
+#include <linux/types.h>
 #include <net/dsa.h>
 
 
@@ -754,7 +756,10 @@ int rtl9300_rtl8226_mode_set(int port, int sds_num, phy_interface_t phy_mode);
 void rtl9300_sds_field_w(int sds, u32 page, u32 reg, int end_bit, int start_bit, u32 v);
 u32 rtl9300_sds_field_r(int sds, u32 page, u32 reg, int end_bit, int start_bit);
 void rtl930x_print_matrix(void);
-int rtl9300_configure_serdes(const int port, const int sds_num, phy_interface_t phy_mode);
+int rtl9300_configure_serdes(const int port,
+                             const enum phylink_port,
+                             const unsigned int link_length,
+                             const int sds_num, phy_interface_t phy_mode);
 void rtl930x_imr_port_link_sts_chg(const u64 ports);
 void rtl930x_isr_port_link_sts_chg(const u64 ports);
 int rtl930x_mac_force_mode_ctrl(const int port);
