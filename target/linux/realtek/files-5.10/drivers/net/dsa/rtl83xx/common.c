@@ -20,8 +20,10 @@ extern const struct rtl838x_reg rtl839x_reg;
 extern const struct rtl838x_reg rtl930x_reg;
 extern const struct rtl838x_reg rtl931x_reg;
 
-extern const struct dsa_switch_ops rtl83xx_switch_ops;
+extern const struct dsa_switch_ops rtl838x_switch_ops;
+extern const struct dsa_switch_ops rtl839x_switch_ops;
 extern const struct dsa_switch_ops rtl930x_switch_ops;
+extern const struct dsa_switch_ops rtl931x_switch_ops;
 
 DEFINE_MUTEX(smi_lock);
 
@@ -1465,7 +1467,6 @@ static int __init rtl83xx_sw_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	priv->ds->dev = dev;
 	priv->ds->priv = priv;
-	priv->ds->ops = &rtl83xx_switch_ops;
 	priv->dev = dev;
 
 	mutex_init(&priv->reg_mutex);
@@ -1474,7 +1475,7 @@ static int __init rtl83xx_sw_probe(struct platform_device *pdev)
 	priv->id = soc_info.id;
 	switch(soc_info.family) {
 	case RTL8380_FAMILY_ID:
-		priv->ds->ops = &rtl83xx_switch_ops;
+		priv->ds->ops = &rtl838x_switch_ops;
 		priv->cpu_port = RTL838X_PORT_CPU;
 		priv->port_mask = 0x1f;
 		priv->port_width = 1;
@@ -1490,7 +1491,7 @@ static int __init rtl83xx_sw_probe(struct platform_device *pdev)
 		priv->n_counters = 128;
 		break;
 	case RTL8390_FAMILY_ID:
-		priv->ds->ops = &rtl83xx_switch_ops;
+		priv->ds->ops = &rtl839x_switch_ops;
 		priv->cpu_port = RTL839X_PORT_CPU;
 		priv->port_mask = 0x3f;
 		priv->port_width = 2;
@@ -1523,7 +1524,7 @@ static int __init rtl83xx_sw_probe(struct platform_device *pdev)
 		priv->n_counters = 2048;
 		break;
 	case RTL9310_FAMILY_ID:
-		priv->ds->ops = &rtl930x_switch_ops;
+		priv->ds->ops = &rtl931x_switch_ops;
 		priv->cpu_port = RTL931X_PORT_CPU;
 		priv->port_mask = 0x3f;
 		priv->port_width = 2;
