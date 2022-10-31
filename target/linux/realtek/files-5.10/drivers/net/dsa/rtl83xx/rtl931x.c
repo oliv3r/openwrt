@@ -306,7 +306,7 @@ irqreturn_t rtl931x_switch_irq(int irq, void *dev_id)
 	link = rtl839x_get_port_reg_le(RTL931X_MAC_LINK_STS);
 	pr_debug("RTL931X Link change: status: %x, link status %016llx\n", status, link);
 
-	for (i = 0; i < 56; i++) {
+	for (i = 0; i < RTL931X_PORT_END; i++) {
 		if (ports & BIT_ULL(i)) {
 			if (link & BIT_ULL(i)) {
 				pr_info("%s port %d up\n", __func__, i);
@@ -469,10 +469,10 @@ void rtl931x_print_matrix(void)
 	volatile u64 *ptr = RTL838X_SW_BASE + RTL839X_PORT_ISO_CTRL(0);
 	int i;
 
-	for (i = 0; i < 52; i += 4)
+	for (i = 0; i < RTL931X_PORT_CNT; i += 4)
 		pr_info("> %16llx %16llx %16llx %16llx\n",
 			ptr[i + 0], ptr[i + 1], ptr[i + 2], ptr[i + 3]);
-	pr_info("CPU_PORT> %16llx\n", ptr[52]);
+	pr_info("CPU_PORT> %16llx\n", ptr[RTL931X_PORT_CPU]);
 }
 
 void rtl931x_set_receive_management_action(int port, rma_ctrl_t type, action_type_t action)

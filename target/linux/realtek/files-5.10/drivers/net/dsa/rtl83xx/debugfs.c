@@ -537,7 +537,7 @@ static int rtl838x_dbgfs_leds(struct dentry *parent, struct rtl838x_switch_priv 
 				(u32 *)(RTL838X_SW_BASE + RTL8380_LED1_SW_P_EN_CTRL));
 		debugfs_create_x32("led2_sw_p_en_ctrl", 0644, led_dir,
 				(u32 *)(RTL838X_SW_BASE + RTL8380_LED2_SW_P_EN_CTRL));
-		for (p = 0; p < 28; p++) {
+		for (p = 0; p < RTL838X_PORT_CNT; p++) {
 			snprintf(led_sw_p_ctrl_name, sizeof(led_sw_p_ctrl_name),
 				 "led_sw_p_ctrl.%02d", p);
 			debugfs_create_x32(led_sw_p_ctrl_name, 0644, led_dir,
@@ -577,7 +577,7 @@ static int rtl838x_dbgfs_leds(struct dentry *parent, struct rtl838x_switch_priv 
 			debugfs_create_x32(port_led_name, 0644, led_dir,
 				(u32 *)(RTL838X_SW_BASE + RTL8390_LED_SW_P_EN_CTRL(p * 10)));
 		}
-		for (p = 0; p < 28; p++) {
+		for (p = 0; p < RTL838X_PORT_CNT; p++) {
 			snprintf(port_led_name, sizeof(port_led_name), "led_sw_p_ctrl.%02d", p);
 			debugfs_create_x32(port_led_name, 0644, led_dir,
 				(u32 *)(RTL838X_SW_BASE + RTL8390_LED_SW_P_CTRL(p)));
