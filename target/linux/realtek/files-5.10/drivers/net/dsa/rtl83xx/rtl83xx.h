@@ -710,6 +710,12 @@ void rtl838x_imr_port_link_sts_chg(const u64 ports);
 void rtl838x_imr_port_media_sts_chg(const u64 ports);
 void rtl838x_isr_port_link_sts_chg(const u64 ports);
 void rtl838x_isr_port_media_sts_chg(const u64 ports);
+int rtl838x_mac_link_sts(const int port);
+int rtl838x_mac_link_dup_sts(const int port);
+int rtl838x_mac_link_media_sts(const int port);
+int rtl838x_mac_link_spd_sts(const int port);
+int rtl838x_mac_rx_pause_sts(const int port);
+int rtl838x_mac_tx_pause_sts(const int port);
 
 /* RTL839x-specific */
 u32 rtl839x_hash(struct rtl838x_switch_priv *priv, u64 seed);
@@ -723,6 +729,12 @@ void rtl839x_imr_port_link_sts_chg(const u64 ports);
 void rtl839x_imr_port_media_sts_chg(const u64 ports);
 void rtl839x_isr_port_link_sts_chg(const u64 ports);
 void rtl839x_isr_port_media_sts_chg(const u64 ports);
+int rtl839x_mac_link_dup_sts(const int port);
+int rtl839x_mac_link_media_sts(const int port);
+int rtl839x_mac_link_spd_sts(const int port);
+bool rtl893x_mac_link_500m_sts(const int port);
+int rtl839x_mac_rx_pause_sts(const int port);
+int rtl839x_mac_tx_pause_sts(const int port);
 
 /* RTL930x-specific */
 u32 rtl930x_hash(struct rtl838x_switch_priv *priv, u64 seed);
@@ -735,6 +747,12 @@ int rtl9300_serdes_setup(int sds_num, phy_interface_t phy_mode);
 void rtl930x_print_matrix(void);
 void rtl930x_imr_port_link_sts_chg(const u64 ports);
 void rtl930x_isr_port_link_sts_chg(const u64 ports);
+int rtl930x_mac_link_sts(const int port);
+int rtl930x_mac_link_dup_sts(const int port);
+int rtl930x_mac_link_media_sts(const int port);
+int rtl930x_mac_link_spd_sts(const int port);
+int rtl930x_mac_rx_pause_sts(const int port);
+int rtl930x_mac_tx_pause_sts(const int port);
 
 /* RTL931x-specific */
 irqreturn_t rtl931x_switch_irq(int irq, void *dev_id);
@@ -745,6 +763,12 @@ void rtl931x_imr_port_link_sts_chg(const u64 ports);
 void rtl931x_isr_port_link_sts_chg(const u64 ports);
 void rtl931x_imr_serdes_upd_phy_sts(const u64 ports);
 void rtl931x_isr_serdes_upd_phy_sts(const u64 ports);
+int rtl931x_mac_link_sts(const int port);
+int rtl931x_mac_link_dup_sts(const int port);
+int rtl931x_mac_link_media_sts(const int port);
+int rtl931x_mac_link_spd_sts(const int port);
+int rtl931x_mac_rx_pause_sts(const int port);
+int rtl931x_mac_tx_pause_sts(const int port);
 
 int rtl83xx_lag_add(struct dsa_switch *ds, int group, int port, struct netdev_lag_upper_info *info);
 int rtl83xx_lag_del(struct dsa_switch *ds, int group, int port);
