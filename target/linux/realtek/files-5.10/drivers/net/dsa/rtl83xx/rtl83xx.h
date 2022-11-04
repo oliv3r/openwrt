@@ -5,7 +5,6 @@
 
 #include <linux/bitops.h>
 #include <net/dsa.h>
-#include "rtl838x.h"
 
 
 #define RTL8380_VERSION_A 'A'
@@ -665,6 +664,8 @@ typedef enum {
 	RTL9310_TBL_5,
 	RTL_TBL_END
 } rtl838x_tbl_reg_t;
+
+struct rtl838x_switch_priv;
 
 void rtl_table_init(void);
 struct table_reg *rtl_table_get(rtl838x_tbl_reg_t r, int t);

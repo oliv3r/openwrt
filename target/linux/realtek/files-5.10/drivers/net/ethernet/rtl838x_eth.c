@@ -23,8 +23,8 @@
 #include <net/switchdev.h>
 #include <asm/cacheflush.h>
 
-
 #include "../dsa/rtl83xx/rtl83xx.h"
+#include "../dsa/rtl83xx/rtl838x.h"
 #include "rtl838x_eth.h"
 
 #define DMA_RING(r)                                                     BIT(r)

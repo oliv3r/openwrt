@@ -5,6 +5,7 @@
 #include <linux/delay.h>
 
 #include "rtl83xx.h"
+#include "rtl838x.h"
 
 static struct rtl838x_switch_priv *switch_priv;
 extern struct rtl83xx_soc_info soc_info;

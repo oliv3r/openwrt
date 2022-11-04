@@ -5,6 +5,7 @@
 #include <linux/kernel.h>
 
 #include "rtl83xx.h"
+#include "rtl838x.h"
 
 #define RTL838X_DRIVER_NAME "rtl838x"
 

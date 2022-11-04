@@ -6,7 +6,7 @@
 #include <uapi/linux/ethtool.h>
 
 #include "rtl83xx.h"
-
+#include "rtl838x.h"
 
 extern struct rtl83xx_soc_info soc_info;
 

@@ -3,6 +3,8 @@
 #ifndef _RTL838X_ETH_H
 #define _RTL838X_ETH_H
 
+#include "../dsa/rtl83xx/rtl83xx.h"
+
 /*
  * Register definition
  */

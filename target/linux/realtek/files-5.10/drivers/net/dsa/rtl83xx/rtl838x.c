@@ -6,6 +6,7 @@
 #include <uapi/linux/ethtool.h>
 
 #include "rtl83xx.h"
+#include "rtl838x.h"
 
 #define RTL838X_VLAN_PORT_TAG_STS_UNTAG				0x0
 #define RTL838X_VLAN_PORT_TAG_STS_TAGGED			0x1

@@ -15,6 +15,7 @@
 #include <linux/sfp.h>
 
 #include "rtl83xx-phy.h"
+#include "../dsa/rtl83xx/rtl83xx.h"
 
 extern struct rtl83xx_soc_info soc_info;
 extern struct mutex smi_lock;
