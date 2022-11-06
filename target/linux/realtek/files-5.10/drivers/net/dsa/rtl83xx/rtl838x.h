@@ -8,20 +8,6 @@
 /*
  * Register definition
  */
-#define RTL838X_MAC_PORT_CTRL(port)		(0xd560 + (((port) << 7)))
-#define RTL839X_MAC_PORT_CTRL(port)		(0x8004 + (((port) << 7)))
-#define RTL930X_MAC_PORT_CTRL(port)		(0x3260 + (((port) << 6)))
-#define RTL931X_MAC_PORT_CTRL			(0x6004)
-
-#define RTL930X_MAC_L2_PORT_CTRL(port)		(0x3268 + (((port) << 6)))
-#define RTL931X_MAC_L2_PORT_CTRL		(0x6000)
-
-
-#define RTL838X_MAC_FORCE_MODE_CTRL		(0xa104)
-#define RTL839X_MAC_FORCE_MODE_CTRL		(0x02bc)
-#define RTL930X_MAC_FORCE_MODE_CTRL		(0xCA1C)
-#define RTL931X_MAC_FORCE_MODE_CTRL		(0x0DCC)
-
 #define RTL838X_DMY_REG31			(0x3b28)
 #define RTL838X_SDS_MODE_SEL			(0x0028)
 #define RTL838X_SDS_CFG_REG			(0x0034)
@@ -119,60 +105,6 @@
 #define RTL931X_TBL_ACCESS_DATA_4(i)		(0x20E0 + (((i) << 2)))
 #define RTL931X_TBL_ACCESS_CTRL_5		(0x7E1C)
 #define RTL931X_TBL_ACCESS_DATA_5(i)		(0x7E20 + (((i) << 2)))
-
-/* MAC handling */
-#define RTL838X_MAC_LINK_STS_ADDR		(0xa188)
-#define RTL839X_MAC_LINK_STS_ADDR		(0x0390)
-#define RTL930X_MAC_LINK_STS_ADDR		(0xCB10)
-#define RTL931X_MAC_LINK_STS_ADDR		(0x0EC0)
-#define RTL838X_MAC_LINK_SPD_STS_PORT_ADDR(p)	(0xa190 + (((p >> 4) << 2)))
-#define RTL839X_MAC_LINK_SPD_STS_PORT_ADDR(p)	(0x03a0 + (((p >> 4) << 2)))
-#define RTL930X_MAC_LINK_SPD_STS_PORT_ADDR(p)	(0xCB18 + (((p >> 3) << 2)))
-#define RTL931X_MAC_LINK_SPD_STS_ADDR		(0x0ED0)
-#define RTL838X_MAC_LINK_DUP_STS_ADDR		(0xa19c)
-#define RTL839X_MAC_LINK_DUP_STS_ADDR		(0x03b0)
-#define RTL930X_MAC_LINK_DUP_STS_ADDR		(0xCB28)
-#define RTL931X_MAC_LINK_DUP_STS_ADDR		(0x0EF0)
-#define RTL838X_MAC_TX_PAUSE_STS_ADDR		(0xa1a0)
-#define RTL839X_MAC_TX_PAUSE_STS_ADDR		(0x03b8)
-#define RTL930X_MAC_TX_PAUSE_STS_ADDR		(0xCB2C)
-#define RTL931X_MAC_TX_PAUSE_STS_ADDR		(0x0EF8)
-#define RTL838X_MAC_RX_PAUSE_STS_ADDR		(0xa1a4)
-#define RTL839X_MAC_RX_PAUSE_STS_ADDR		(0x03c0)
-#define RTL930X_MAC_RX_PAUSE_STS_ADDR		(0xCB30)
-#define RTL931X_MAC_RX_PAUSE_STS_ADDR		(0x0F00)
-#define RTL930X_MAC_LINK_MEDIA_STS_ADDR		(0xCB14)
-#define RTL931X_MAC_LINK_MEDIA_STS_ADDR		(0x0EC8)
-
-/* MAC link state bits */
-#define RTL838X_FORCE_EN			(1 << 0)
-#define RTL838X_FORCE_LINK_EN			(1 << 1)
-#define RTL838X_NWAY_EN				(1 << 2)
-#define RTL838X_DUPLEX_MODE			(1 << 3)
-#define RTL838X_TX_PAUSE_EN			(1 << 6)
-#define RTL838X_RX_PAUSE_EN			(1 << 7)
-#define RTL838X_MAC_FORCE_FC_EN			(1 << 8)
-
-#define RTL839X_FORCE_EN			(1 << 0)
-#define RTL839X_FORCE_LINK_EN			(1 << 1)
-#define RTL839X_DUPLEX_MODE			(1 << 2)
-#define RTL839X_TX_PAUSE_EN			(1 << 5)
-#define RTL839X_RX_PAUSE_EN			(1 << 6)
-#define RTL839X_MAC_FORCE_FC_EN			(1 << 7)
-
-#define RTL930X_FORCE_EN			(1 << 0)
-#define RTL930X_FORCE_LINK_EN			(1 << 1)
-#define RTL930X_DUPLEX_MODE			(1 << 2)
-#define RTL930X_TX_PAUSE_EN			(1 << 7)
-#define RTL930X_RX_PAUSE_EN			(1 << 8)
-#define RTL930X_MAC_FORCE_FC_EN			(1 << 9)
-
-#define RTL931X_FORCE_EN			(1 << 9)
-#define RTL931X_FORCE_LINK_EN			(1 << 0)
-#define RTL931X_DUPLEX_MODE			(1 << 2)
-#define RTL931X_MAC_FORCE_FC_EN			(1 << 4)
-#define RTL931X_TX_PAUSE_EN			(1 << 16)
-#define RTL931X_RX_PAUSE_EN			(1 << 17)
 
 /* EEE */
 #define RTL838X_MAC_EEE_ABLTY			(0xa1a8)
