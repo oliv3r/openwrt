@@ -3002,8 +3002,7 @@ int rtl9300_configure_serdes(struct phy_device *phydev)
 
 	rtl9300_phy_enable_10g_1g(sds_num);
 
-	// Disable MAC
-	sw_w32_mask(0, 1, RTL930X_MAC_FORCE_MODE_CTRL);
+	sw_w32_mask(0, RTL930X_MAC_FORCE_MODE_CTRL_EN, RTL930X_MAC_FORCE_MODE_CTRL_REG(0));
 	mdelay(20);
 
 	// ----> dal_longan_sds_mode_set
@@ -3012,14 +3011,12 @@ int rtl9300_configure_serdes(struct phy_device *phydev)
 	// Configure link to MAC
 	rtl9300_serdes_mac_link_config(sds_num, true, true);	// MAC Construct
 
-	// Disable MAC
-	sw_w32_mask(0, 1, RTL930X_MAC_FORCE_MODE_CTRL);
+	sw_w32_mask(0, RTL930X_MAC_FORCE_MODE_CTRL_EN, RTL930X_MAC_FORCE_MODE_CTRL_REG(0));
 	mdelay(20);
 
 	rtl9300_force_sds_mode(sds_num, PHY_INTERFACE_MODE_NA);
 
-	// Re-Enable MAC
-	sw_w32_mask(1, 0, RTL930X_MAC_FORCE_MODE_CTRL);
+	sw_w32_mask(RTL930X_MAC_FORCE_MODE_CTRL_EN, 0, RTL930X_MAC_FORCE_MODE_CTRL_REG(0));
 
 	rtl9300_force_sds_mode(sds_num, phy_mode);
 
