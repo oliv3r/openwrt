@@ -151,6 +151,22 @@ u16 rtl9300_sds_regs[] = { 0x0194, 0x0194, 0x0194, 0x0194, 0x02a0, 0x02a0, 0x02a
 			   0x02A4, 0x02A4, 0x0198, 0x0198 };
 u8  rtl9300_sds_lsb[]  = { 0, 6, 12, 18, 0, 6, 12, 18, 0, 6, 0, 6};
 
+void rtl9300_sds_set(int sds_num, u32 mode)
+{
+	pr_info("%s %d\n", __func__, mode);
+	if (sds_num < 0 || sds_num > 11) {
+		pr_err("Wrong SerDes number: %d\n", sds_num);
+		return;
+	}
+
+	sw_w32_mask(0x1f << rtl9300_sds_lsb[sds_num], mode << rtl9300_sds_lsb[sds_num],
+		    rtl9300_sds_regs[sds_num]);
+
+	pr_debug("%s: 194:%08x 198:%08x 2a0:%08x 2a4:%08x\n", __func__,
+		sw_r32(0x194), sw_r32(0x198), sw_r32(0x2a0), sw_r32(0x2a4));
+}
+
+
 /*
  * Reset the SerDes by powering it off and set a new operations mode
  * of the SerDes. 0x1f is off. Other modes are
@@ -168,28 +184,10 @@ void rtl9300_sds_rst(int sds_num, u32 mode)
 		return;
 	}
 
-	sw_w32_mask(0x1f << rtl9300_sds_lsb[sds_num], 0x1f << rtl9300_sds_lsb[sds_num],
-		    rtl9300_sds_regs[sds_num]);
+	rtl9300_sds_set(sds_num, 0x1f);
 	mdelay(10);
 
-	sw_w32_mask(0x1f << rtl9300_sds_lsb[sds_num], mode << rtl9300_sds_lsb[sds_num],
-		    rtl9300_sds_regs[sds_num]);
-	mdelay(10);
-
-	pr_debug("%s: 194:%08x 198:%08x 2a0:%08x 2a4:%08x\n", __func__,
-	         sw_r32(0x194), sw_r32(0x198), sw_r32(0x2a0), sw_r32(0x2a4));
-}
-
-void rtl9300_sds_set(int sds_num, u32 mode)
-{
-	pr_info("%s %d\n", __func__, mode);
-	if (sds_num < 0 || sds_num > 11) {
-		pr_err("Wrong SerDes number: %d\n", sds_num);
-		return;
-	}
-
-	sw_w32_mask(0x1f << rtl9300_sds_lsb[sds_num], mode << rtl9300_sds_lsb[sds_num],
-		    rtl9300_sds_regs[sds_num]);
+	rtl9300_sds_set(sds_num, mode);
 	mdelay(10);
 
 	pr_debug("%s: 194:%08x 198:%08x 2a0:%08x 2a4:%08x\n", __func__,
