@@ -13,6 +13,54 @@
 #define RTL8380_VERSION_B 'B'
 
 /* RTL838x series */
+#define RTL838X_IMR_GLB_REG                             (0x1100)
+/* Reserved                                                     31 - 1 */
+#define RTL838X_IMR_GLB_SWITCH                                  BIT(0)
+
+#define RTL838X_IMR_PORT_LINK_STS_REG(p)                (0x1104 + (((p) / 32) * 0x4))
+#define _RTL838X_IMR_PORT_LINK_STS_MASK                         BIT(0)
+#define RTL838X_IMR_PORT_LINK_STS(p) \
+        (_RTL838X_IMR_PORT_LINK_STS_MASK << ((p) % 32))
+
+#define RTL838X_IMR_PORT_MEDIA_STS_REG(p)               (0x1108 + (((p) / 32) * 0x4))
+/* Reserved                                                     31 - 4 */
+#define _RTL838X_IMR_PORT_MEDIA_STS_CHG_MASK                    BIT(0)
+#define RTL838X_IMR_PORT_MEDIA_STS_CHG(p) \
+        (_RTL838X_IMR_PORT_MEDIA_STS_CHG_MASK << ((p) % 32))
+
+#define RTL838X_ISR_GLB_SRC_REG                         (0x1148)
+/* Reserved                                                     31 - 15 */
+#define RTL838X_ISR_GLB_SRC_SYSCLK_GATE                         BIT(14)
+#define RTL838X_ISR_GLB_SRC_TM                                  BIT(13)
+#define RTL838X_ISR_GLB_SRC_EXTRA_GPIO                          BIT(12)
+#define RTL838X_ISR_GLB_SRC_INT_GPHY                            BIT(11)
+#define RTL838X_ISR_GLB_SRC_GPIO                                BIT(10)
+#define RTL838X_ISR_GLB_SRC_ACL_HIT                             BIT(9)
+#define RTL838X_ISR_GLB_SRC_FID_SALRN_CONSTRT                   BIT(8)
+#define RTL838X_ISR_GLB_SRC_TIMESTAMP_LATCH                     BIT(7)
+#define RTL838X_ISR_GLB_SRC_SERDES5                             BIT(6)
+#define RTL838X_ISR_GLB_SRC_SERDES4                             BIT(5)
+#define RTL838X_ISR_GLB_SRC_SERDES23                            BIT(4)
+#define RTL838X_ISR_GLB_SRC_SERDES01                            BIT(3)
+#define RTL838X_ISR_GLB_SRC_SALARN_CONSTRT                      BIT(2)
+#define RTL838X_ISR_GLB_SRC_MEDIA_CHG                           BIT(1)
+#define RTL838X_ISR_GLB_SRC_LINK_CHG                            BIT(0)
+
+#define RTL838X_ISR_PORT_MEDIA_STS_REG(p)               (0x1150 + (((p) / 32) * 0x4))
+/* Reserved                                                     31 - 4 */
+#define _RTL838X_ISR_PORT_MEDIA_STS_CHG_MASK                    BIT(0)
+#define RTL838X_ISR_PORT_MEDIA_STS_CHG(p, r) \
+        (((r) >> ((p) % 32)) & _RTL838X_ISR_PORT_MEDIA_STS_CHG_MASK)
+#define RTL838X_ISR_PORT_MEDIA_STS_CHG_CLR(p) \
+        (_RTL838X_ISR_PORT_MEDIA_STS_CHG_MASK << ((p) % 32))
+
+#define RTL838X_ISR_PORT_LINK_STS_REG(p)                (0x114c + ((p / 32) * 0x4))
+#define _RTL838X_ISR_PORT_LINK_STS_MASK                         BIT(0)
+#define RTL838X_ISR_PORT_LINK_STS(p, r) \
+        (((r) >> ((p) % 32)) & _RTL838X_ISR_PORT_LINK_STS_MASK)
+#define RTL838X_ISR_PORT_LINK_STS_CLR(p) \
+        (_RTL838X_ISR_PORT_LINK_STS_MASK << ((p) % 32))
+
 #define RTL838X_MAC_FORCE_MODE_CTRL_REG(p)              (0xa104 + ((p) * 0x4))
 /* Reserved                                                     31 - 28 */
 #define RTL838X_MAC_FORCE_MODE_CTRL_PHY_POWER_SEL               BIT(27)
@@ -102,6 +150,60 @@
         (RTL838X_MAC_PORT_CTRL_TX_EN | RTL838X_MAC_PORT_CTRL_RX_EN)
 
 /* RTL839x series */
+#define RTL839X_IMR_GLB_REG                             (0x0064)
+/* Reserved                                                     31 - 1 */
+#define RTL839X_IMR_GLB_EXT_CPU                                 BIT(0)
+
+#define RTL839X_IMR_PORT_LINK_STS_REG(p)                (0x0068 + (((p) / 32) * 0x4))
+#define _RTL839X_IMR_PORT_LINK_STS_MASK                         BIT(0)
+#define RTL839X_IMR_PORT_LINK_STS(p) \
+        (_RTL839X_IMR_PORT_LINK_STS_MASK << ((p) % 32))
+
+#define RTL839X_IMR_PORT_MEDIA_STS_REG(p)               (0x0070 + (((p) / 32) * 0x4))
+/* Reserved                                                     31 - 4 */
+#define _RTL839X_IMR_PORT_MEDIA_STS_CHG_MASK                    BIT(0)
+#define RTL839X_IMR_PORT_MEDIA_STS_CHG(p) \
+        (_RTL839X_IMR_PORT_MEDIA_STS_CHG_MASK << ((p) % 32))
+
+#define RTL839X_IMR_SERDES_REG                          (0x008c)
+#define _RTL839X_IMR_SERDES_LINK_STS_MASK                       BIT(0)
+#define RTL839X_IMR_SERDES_LINK_STS(p) \
+        (_RTL839X_IMR_SERDES_LINK_STS_MASK << (p))
+
+#define RTL839X_ISR_GLB_SRC_REG                         (0x009c)
+/* Reserved                                                     31 - 10 */
+#define RTL839X_ISR_GLB_SRC_EXT_GPIO                            BIT(9)
+#define RTL839X_ISR_GLB_SRC_ETHDM                               BIT(8)
+#define RTL839X_ISR_GLB_SRC_OAM_DYGASP                          BIT(7)
+#define RTL839X_ISR_GLB_SRC_CCM                                 BIT(6)
+#define RTL839X_ISR_GLB_SRC_TIMESTAMP_LATCH                     BIT(5)
+#define RTL839X_ISR_GLB_SRC_EEE_CHG                             BIT(4)
+#define RTL839X_ISR_GLB_SRC_SERDES                              BIT(3)
+#define RTL839X_ISR_GLB_SRC_FEFI                                BIT(2)
+#define RTL839X_ISR_GLB_SRC_MEDIA_CHG                           BIT(1)
+#define RTL839X_ISR_GLB_SRC_LINK_CHG                            BIT(0)
+
+#define RTL839X_ISR_PORT_LINK_STS_REG(p)                (0x00a0 + ((p / 32) * 0x4))
+#define _RTL839X_ISR_PORT_LINK_STS_MASK                         BIT(0)
+#define RTL839X_ISR_PORT_LINK_STS(p, r) \
+        (((r) >> ((p) % 32)) & _RTL839X_ISR_PORT_LINK_STS_MASK)
+#define RTL839X_ISR_PORT_LINK_STS_CLR(p) \
+        (((r) & _RTL839X_ISR_PORT_LINK_STS_MASK) << ((p) % 32))
+
+#define RTL839X_ISR_PORT_MEDIA_STS_REG(p)               (0x00a8 + ((p / 32) * 0x4))
+#define _RTL839X_ISR_PORT_MEDIA_STS_CHG_MASK                    BIT(0)
+#define RTL839X_ISR_PORT_MEDIA_STS_CHG(p, r) \
+        (((r) >> ((p) % 32)) & _RTL839X_ISR_PORT_MEDIA_STS_CHG_MASK)
+#define RTL839X_ISR_PORT_MEDIA_STS_CHG_CLR(p) \
+        (_RTL839X_ISR_PORT_MEDIA_STS_CHG_MASK << ((p) % 32))
+
+#define RTL839X_ISR_SERDES_REG                          (0x00c4)
+#define _RTL839X_ISR_SERDES_LINK_FAULT_MASK                     BIT(0)
+#define RTL839X_ISR_SERDES_LINK_FAULT(p, r) \
+        (((r) >> (p)) & _RTL839X_ISR_SERDES_LINK_FAULT_MASK)
+#define RTL839X_ISR_SERDES_LINK_FAULT_CLR(p) \
+        (_RTL839X_ISR_SERDES_LINK_FAULT_MASK << (p))
+
 #define RTL839X_MAC_FORCE_MODE_CTRL_REG(p)              (0x02bc + ((p) * 0x4))
 /* Reserved                                                     31 - 16 */
 #define RTL839X_MAC_FORCE_MODE_CTRL_500M_SPD                    BIT(15)
@@ -183,6 +285,77 @@
         (RTL839X_MAC_PORT_CTRL_TX_EN | RTL839X_MAC_PORT_CTRL_RX_EN)
 
 /* RTL930x series */
+#define RTL930X_IMR_GLB_REG                             (0xc628)
+/* Reserved                                                     31 - 1 */
+#define RTL930X_IMR_GLB_EXT_CPU                               BIT(0)
+
+#define RTL930X_IMR_PORT_LINK_STS_REG(p)                (0xc62c + (((p) / 32) * 0x4))
+#define _RTL930X_IMR_PORT_LINK_STS_MASK                         BIT(0)
+#define RTL930X_IMR_PORT_LINK_STS(p) \
+        (_RTL930X_IMR_PORT_LINK_STS_MASK << ((p) % 32))
+
+#define RTL930X_IMR_SERDES_LINK_FAULT_REG               (0xc634)
+#define _RTL930X_IMR_SERDES_LINK_FAULT_MASK                     BIT(0)
+#define RTL930X_IMR_SERDES_LINK_FAULT(p) \
+        (_RTL930X_IMR_SERDES_LINK_FAULT_MASK << (p))
+
+#define RTL930X_IMR_SERDES_RX_SYM_ERR_REG               (0xc638)
+#define _RTL930X_IMR_SERDES_RX_SYM_ERR_MASK                     BIT(0)
+#define RTL930X_IMR_SERDES_RX_SYM_ERR(r) \
+        (_RTL930X_IMR_SERDES_RX_SYM_ERR_MASK << (p))
+
+#define RTL930X_IMR_SERDES_UPD_PHY_STS_REG(p)           (0xc650 + (((p) / 32) * 0x4))
+#define _RTL930X_IMR_SERDES_UPD_PHY_STS_MASK                    BIT(0)
+#define RTL930X_IMR_SERDES_UPD_PHY_STS(p) \
+        (_RTL930X_IMR_SERDES_UPD_PHY_STS_MASK << ((p) % 32))
+
+#define RTL930X_ISR_GLB_REG                             (0xc658)
+/* Reserved                                                     31 - 22 */
+#define RTL930X_ISR_GLB_SDS_RX_SYM_ERR                          BIT(21)
+#define RTL930X_ISR_GLB_ROUT_L2_NTFY_BUF                        BIT(20)
+#define RTL930X_ISR_GLB_ROUT_PBUF                               BIT(19)
+#define RTL930X_ISR_GLB_RLFD                                    BIT(18)
+#define RTL930X_ISR_GLB_SDS_UPD_PHY_STS                         BIT(17)
+#define RTL930X_ISR_GLB_AUTO_REC                                BIT(16)
+/* Reserved                                                     15 */
+#define RTL930X_ISR_GLB_SMI_CHECK                               BIT(14)
+#define RTL930X_ISR_GLB_TERMAL_DETECT                           BIT(13)
+#define RTL930X_ISR_GLB_EXT_GPIO                                BIT(12)
+/* Reserved                                                     11 */
+#define RTL930X_ISR_GLB_OAM_DYGASP                              BIT(10)
+/* Reserved                                                     9 - 3 */
+#define RTL930X_ISR_GLB_SERDES_LINK_FAULT_P                     BIT(2)
+/* Reserved                                                     1 */
+#define RTL930X_ISR_GLB_LINK_CHG                                BIT(0)
+
+#define RTL930X_ISR_PORT_LINK_STS_REG(p)                (0xc660 + ((p / 32) * 0x4))
+#define _RTL930X_ISR_PORT_LINK_STS_MASK                         BIT(0)
+#define RTL930X_ISR_PORT_LINK_STS(p, r) \
+        (((r) >> ((p) % 32)) & _RTL930X_ISR_PORT_LINK_STS_MASK)
+#define RTL930X_ISR_PORT_LINK_STS_CLR(p) \
+        (_RTL930X_ISR_PORT_LINK_STS_MASK << ((p) % 32))
+
+#define RTL930X_ISR_SERDES_LINK_FAULT_REG               (0xc668)
+#define _RTL930X_ISR_SERDES_LINK_FAULT_MASK                     BIT(0)
+#define RTL930X_ISR_SERDES_LINK_FAULT(p, r) \
+        (((r) >> (p)) & _RTL930X_ISR_SERDES_LINK_FAULT_MASK)
+#define RTL930X_ISR_SERDES_LINK_FAULT_CLR(p) \
+        (_RTL930X_ISR_SERDES_LINK_FAULT_MASK << (p))
+
+#define RTL930X_ISR_SERDES_RX_SYM_ERR_REG               (0xc66c)
+#define _RTL930X_ISR_SERDES_RX_SYM_ERR_MASK                     BIT(0)
+#define RTL930X_ISR_SERDES_RX_SYM_ERR(p, r) \
+        (((r) >> (p)) & _RTL930X_ISR_SERDES_RX_SYM_ERR_MASK)
+#define RTL930X_ISR_SERDES_RX_SYM_ERR_CLR(r) \
+        (_RTL930X_ISR_SERDES_RX_SYM_ERR_MASK << (p))
+
+#define RTL930X_ISR_SERDES_UPD_PHY_STS_REG(p)           (0xc690 + ((p) * 0x4))
+#define _RTL930X_ISR_SERDES_UPD_PHY_STS_MASK                    BIT(0)
+#define RTL930X_ISR_SERDES_UPD_PHY_STS(p, r) \
+        (((r) >> ((p) % 32)) & _RTL930X_ISR_SERDES_UPD_PHY_STS_MASK)
+#define RTL930X_ISR_SERDES_UPD_PHY_STS_CLR(r) \
+        (_RTL930X_ISR_SERDES_UPD_PHY_STS_MASK << ((p) % 32))
+
 #define RTL930X_MAC_PORT_CTRL_REG(p)                    (0x3260 + ((p) * 0x40))
 /* Reserved                                                     31 - 5 */
 #define RTL930X_MAC_PORT_CTRL_PRECOLLAT_SEL                     GENMASK(4, 3)
@@ -359,6 +532,74 @@
 #define RTL931X_MAC_RX_PAUSE_STS(p, r) \
         (((r) >> ((p) % 32)) & _RTL931X_MAC_RX_PAUSE_STS_MASK)
 
+/* IMR_GLB does not exit on RTL931X */
+
+#define RTL931X_IMR_SERDES_ERR_REG                      (0x1274)
+#define _RTL931X_IMR_SERDES_ERR_MASK                            BIT(0)
+#define RTL931X_IMR_SERDES_ERR(p) \
+        (_RTL931X_IMR_SERDES_ERR_MASK << (p))
+
+#define RTL931X_IMR_SERDES_UPD_PHY_STS_REG(p)           (0x1290 + (((p) / 32) * 0x4))
+#define _RTL931X_IMR_SERDES_UPD_PHY_STS_MASK                    BIT(0)
+#define RTL931X_IMR_SERDES_UPD_PHY_STS(p) \
+        (_RTL931X_IMR_SERDES_UPD_PHY_STS_MASK << ((p) % 32))
+
+#define RTL931X_IMR_SERDES_RXIDLE_REG                   (0x12a0)
+#define _RTL931X_IMR_SERDES_RXIDLE_MASK                         BIT(0)
+#define RTL931X_IMR_SERDES_RXIDLE(p) \
+        (_RTL931X_IMR_SERDES_RXIDLE_MASK << (p))
+
+#define RTL931X_IMR_PORT_LINK_STS_REG(p)                (0x126c + (((p) / 32) * 0x4))
+#define _RTL931X_IMR_PORT_LINK_STS_MASK                         BIT(0)
+#define RTL931X_IMR_PORT_LINK_STS(p, m) \
+        (((m) & _RTL931X_IMR_PORT_LINK_STS_MASK) << ((p) % 32))
+
+#define RTL931X_ISR_GLB_SRC_REG                         (0x12b4)
+/* Reserved                                                     31 - 17 */
+#define RTL931X_ISR_GLB_SRC_DBGO                                BIT(16)
+#define RTL931X_ISR_GLB_SRC_SERDES_RXIDLE                       BIT(15)
+#define RTL931X_ISR_GLB_SRC_RLFD                                BIT(14)
+#define RTL931X_ISR_GLB_SRC_STAT_TRIGGER                        BIT(13)
+#define RTL931X_ISR_GLB_SRC_RMT_INTR_STS_UPD                    BIT(12)
+#define RTL931X_ISR_GLB_SRC_AUTO_REC                            BIT(11)
+#define RTL931X_ISR_GLB_SRC_TX_CRC_CNTR                         BIT(10)
+#define RTL931X_ISR_GLB_SRC_SMI_CHEKC                           BIT(9)
+#define RTL931X_ISR_GLB_SRC_SERDES_UPD_PHY_STS                  BIT(8)
+#define RTL931X_ISR_GLB_SRC_TM                                  BIT(7)
+#define RTL931X_ISR_GLB_SRC_EXT_GPIO                            BIT(6)
+#define RTL931X_ISR_GLB_SRC_ETHDM                               BIT(5)
+#define RTL931X_ISR_GLB_SRC_OAM_DYGASP                          BIT(4)
+#define RTL931X_ISR_GLB_SRC_CCM                                 BIT(3)
+#define RTL931X_ISR_GLB_SRC_TIMESTAMP_LATCH                     BIT(2)
+#define RTL931X_ISR_GLB_SRC_SERDES                              BIT(1)
+#define RTL931X_ISR_GLB_SRC_LINK_CHG                            BIT(0)
+
+#define RTL931X_ISR_PORT_LINK_STS_REG(p)                (0x12b8 + ((p / 32) * 0x4))
+#define _RTL931X_ISR_PORT_LINK_STS_MASK                         BIT(0)
+#define RTL931X_ISR_PORT_LINK_STS(p, r) \
+        (((r) >> ((p) % 32)) & _RTL931X_ISR_PORT_LINK_STS_MASK)
+
+#define RTL931X_ISR_SERDES_ERR_REG                      (0x12c0)
+#define _RTL931X_ISR_SERDES_ERR_MASK                            BIT(0)
+#define RTL931X_ISR_SERDES_ERR(p, r) \
+        (((r) << (p)) & _RTL931X_ISR_SERDES_ERR_MASK)
+#define RTL931X_ISR_SERDES_ERR_CLR(p) \
+        (_RTL931X_ISR_SERDES_ERR_MASK << (p))
+
+#define RTL931X_ISR_SERDES_UPD_PHY_STS_REG(p)           (0x12e8 + ((p / 32) * 0x4))
+#define _RTL931X_ISR_SERDES_UPD_PHY_STS_MASK                    BIT(0)
+#define RTL931X_ISR_SERDES_UPD_PHY_STS(p, r) \
+        (((r) << ((p) % 32)) & _RTL931X_ISR_SERDES_UPD_PHY_STS_MASK)
+#define RTL931X_ISR_SERDES_UPD_PHY_STS_CLR(p) \
+        (_RTL931X_ISR_SERDES_UPD_PHY_STS_MASK << ((p) % 32))
+
+#define RTL931X_ISR_SERDES_RXIDLE_REG                   (0x12f8)
+#define _RTL931X_ISR_SERDES_RXIDLE_MASK                         BIT(0)
+#define RTL931X_ISR_SERDES_LINK_FAULT(p, r) \
+        (((r) << (p)) & _RTL931X_ISR_SERDES_RXIDLE_MASK)
+#define RTL931X_ISR_SERDES_LINK_FAULT_CLR(p) \
+        (_RTL931X_ISR_SERDES_RXIDLE_MASK << (p))
+
 #define RTL931X_MAC_L2_PORT_CTRL_REG(p)                 (0x6000 + ((p) * 0x80))
 /* Reserved                                                     31 - 21 */
 #define RTL931X_MAC_L2_PORT_CTRL_PER_PORT_MAC_ECO               BIT(22)
@@ -465,6 +706,10 @@ int rtl83xx_dsa_phy_read(struct dsa_switch *ds, int phy_addr, int phy_reg);
 void rtl8380_sds_rst(int mac);
 int rtl8380_sds_power(int mac, int val);
 void rtl838x_print_matrix(void);
+void rtl838x_imr_port_link_sts_chg(const u64 ports);
+void rtl838x_imr_port_media_sts_chg(const u64 ports);
+void rtl838x_isr_port_link_sts_chg(const u64 ports);
+void rtl838x_isr_port_media_sts_chg(const u64 ports);
 
 /* RTL839x-specific */
 u32 rtl839x_hash(struct rtl838x_switch_priv *priv, u64 seed);
@@ -474,6 +719,10 @@ void rtl839x_vlan_profile_dump(int index);
 int rtl83xx_dsa_phy_write(struct dsa_switch *ds, int phy_addr, int phy_reg, u16 val);
 void rtl839x_exec_tbl2_cmd(u32 cmd);
 void rtl839x_print_matrix(void);
+void rtl839x_imr_port_link_sts_chg(const u64 ports);
+void rtl839x_imr_port_media_sts_chg(const u64 ports);
+void rtl839x_isr_port_link_sts_chg(const u64 ports);
+void rtl839x_isr_port_media_sts_chg(const u64 ports);
 
 /* RTL930x-specific */
 u32 rtl930x_hash(struct rtl838x_switch_priv *priv, u64 seed);
@@ -484,12 +733,18 @@ int rtl9300_sds_power(int mac, int val);
 void rtl9300_sds_rst(int sds_num, u32 mode);
 int rtl9300_serdes_setup(int sds_num, phy_interface_t phy_mode);
 void rtl930x_print_matrix(void);
+void rtl930x_imr_port_link_sts_chg(const u64 ports);
+void rtl930x_isr_port_link_sts_chg(const u64 ports);
 
 /* RTL931x-specific */
 irqreturn_t rtl931x_switch_irq(int irq, void *dev_id);
 int rtl931x_sds_cmu_band_get(int sds, phy_interface_t mode);
 int rtl931x_sds_cmu_band_set(int sds, bool enable, u32 band, phy_interface_t mode);
 void rtl931x_sds_init(u32 sds, phy_interface_t mode);
+void rtl931x_imr_port_link_sts_chg(const u64 ports);
+void rtl931x_isr_port_link_sts_chg(const u64 ports);
+void rtl931x_imr_serdes_upd_phy_sts(const u64 ports);
+void rtl931x_isr_serdes_upd_phy_sts(const u64 ports);
 
 int rtl83xx_lag_add(struct dsa_switch *ds, int group, int port, struct netdev_lag_upper_info *info);
 int rtl83xx_lag_del(struct dsa_switch *ds, int group, int port);
