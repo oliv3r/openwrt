@@ -124,14 +124,18 @@ void __init prom_init(void)
 	pr_info("RTL838X model is %x\n", model);
 	model = model >> 16 & 0xFFFF;
 
-	if ((model != 0x8328) && (model != 0x8330) && (model != 0x8332)
-	    && (model != 0x8380) && (model != 0x8382)) {
+	if ((model != RTL8328_FAMILY_ID) &&
+	    (model != RTL8330_FAMILY_ID) &&
+	    (model != RTL8332_FAMILY_ID) &&
+	    (model != RTL8380_FAMILY_ID) &&
+	    (model != RTL8382_FAMILY_ID)) {
 		model = sw_r32(RTL839X_MODEL_NAME_INFO);
 		pr_info("RTL839X model is %x\n", model);
 		model = model >> 16 & 0xFFFF;
 	}
 
-	if ((model & 0x8390) != 0x8380 && (model & 0x8390) != 0x8390) {
+	if (((model & RTL8390_FAMILY_ID) != RTL8380_FAMILY_ID) &&
+	    (model & RTL8390_FAMILY_ID) != RTL8390_FAMILY_ID) {
 		model = sw_r32(RTL93XX_MODEL_NAME_INFO);
 		pr_info("RTL93XX model is %x\n", model);
 		model = model >> 16 & 0xFFFF;
@@ -140,51 +144,51 @@ void __init prom_init(void)
 	soc_info.id = model;
 
 	switch (model) {
-	case 0x8328:
+	case RTL8328_FAMILY_ID:
 		soc_info.name = "RTL8328";
 		soc_info.family = RTL8328_FAMILY_ID;
 		break;
-	case 0x8332:
+	case RTL8332_FAMILY_ID:
 		soc_info.name = "RTL8332";
 		soc_info.family = RTL8380_FAMILY_ID;
 		break;
-	case 0x8380:
+	case RTL8380_FAMILY_ID:
 		soc_info.name = "RTL8380";
 		soc_info.family = RTL8380_FAMILY_ID;
 		break;
-	case 0x8382:
+	case RTL8382_FAMILY_ID:
 		soc_info.name = "RTL8382";
 		soc_info.family = RTL8380_FAMILY_ID;
 		break;
-	case 0x8390:
+	case RTL8390_FAMILY_ID:
 		soc_info.name = "RTL8390";
 		soc_info.family = RTL8390_FAMILY_ID;
 		break;
-	case 0x8391:
+	case RTL8391_FAMILY_ID:
 		soc_info.name = "RTL8391";
 		soc_info.family = RTL8390_FAMILY_ID;
 		break;
-	case 0x8392:
+	case RTL8392_FAMILY_ID:
 		soc_info.name = "RTL8392";
 		soc_info.family = RTL8390_FAMILY_ID;
 		break;
-	case 0x8393:
+	case RTL8393_FAMILY_ID:
 		soc_info.name = "RTL8393";
 		soc_info.family = RTL8390_FAMILY_ID;
 		break;
-	case 0x9301:
+	case RTL9301_FAMILY_ID:
 		soc_info.name = "RTL9301";
 		soc_info.family = RTL9300_FAMILY_ID;
 		break;
-	case 0x9302:
+	case RTL9302_FAMILY_ID:
 		identify_rtl9302();
 		soc_info.family = RTL9300_FAMILY_ID;
 		break;
-	case 0x9303:
+	case RTL9303_FAMILY_ID:
 		soc_info.name = "RTL9303";
 		soc_info.family = RTL9300_FAMILY_ID;
 		break;
-	case 0x9313:
+	case RTL9313_FAMILY_ID:
 		soc_info.name = "RTL9313";
 		soc_info.family = RTL9310_FAMILY_ID;
 		break;

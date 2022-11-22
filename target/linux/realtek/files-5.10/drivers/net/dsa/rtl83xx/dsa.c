@@ -1750,7 +1750,7 @@ static int rtl83xx_port_mdb_prepare(struct dsa_switch *ds, int port,
 {
 	struct rtl838x_switch_priv *priv = ds->priv;
 
-	if (priv->id >= 0x9300)
+	if (priv->id >= RTL9300_FAMILY_ID)
 		return -EOPNOTSUPP;
 
 	return 0;
