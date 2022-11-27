@@ -598,12 +598,26 @@ extern int rtl931x_write_mmd_phy(u32 port, u32 devnum, u32 regnum, u32 val);
  */
 void rtl838x_update_cntr(int r, int released)
 {
-	// This feature is not available on RTL838x SoCs
+	u32 reg = RTL838X_DMA_IF_RX_RING_CNTR_REG(r);
+	u32 v = RTL838X_DMA_IF_RX_RING_CNTR_GET(sw_r32(reg), r);
+
+	pr_debug("RX: Work done %d, old value: %d, reg %04x\n", released, v, reg);
+	sw_w32_mask(RTL838X_DMA_IF_RX_RING_CNTR_SET(r, _RTL838X_DMA_IF_RX_RING_CNTR_MASK),
+	            RTL838X_DMA_IF_RX_RING_CNTR_SET(r, released),
+	            RTL838X_DMA_IF_RX_RING_CNTR_REG(r));
+	sw_w32(v, RTL838X_DMA_IF_RX_RING_CNTR_REG(r));
 }
 
 void rtl839x_update_cntr(int r, int released)
 {
-	// This feature is not available on RTL839x SoCs
+	u32 reg = RTL839X_DMA_IF_RX_RING_CNTR_REG(r);
+	u32 v = RTL839X_DMA_IF_RX_RING_CNTR_GET(sw_r32(reg), r);
+
+	pr_debug("RX: Work done %d, old value: %d, reg %04x\n", released, v, reg);
+	sw_w32_mask(RTL839X_DMA_IF_RX_RING_CNTR_SET(r, _RTL839X_DMA_IF_RX_RING_CNTR_MASK),
+	            RTL839X_DMA_IF_RX_RING_CNTR_SET(r, released),
+	            RTL839X_DMA_IF_RX_RING_CNTR_REG(r));
+	sw_w32(v, RTL839X_DMA_IF_RX_RING_CNTR_REG(r));
 }
 
 void rtl930x_update_cntr(int r, int released)
