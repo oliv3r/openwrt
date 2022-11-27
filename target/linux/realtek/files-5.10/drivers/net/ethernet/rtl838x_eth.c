@@ -27,6 +27,46 @@
 #include "../dsa/rtl83xx/rtl83xx.h"
 #include "rtl838x_eth.h"
 
+inline int rtl838x_dma_if_rx_ring_size(int i)
+{
+	return RTL838X_DMA_IF_RX_RING_SIZE + ((i >> 3) << 2);
+}
+
+inline int rtl839x_dma_if_rx_ring_size(int i)
+{
+	return RTL839X_DMA_IF_RX_RING_SIZE + ((i >> 3) << 2);
+}
+
+inline int rtl930x_dma_if_rx_ring_size(int i)
+{
+	return RTL930X_DMA_IF_RX_RING_SIZE + ((i / 3) << 2);
+}
+
+inline int rtl931x_dma_if_rx_ring_size(int i)
+{
+	return RTL931X_DMA_IF_RX_RING_SIZE + ((i / 3) << 2);
+}
+
+inline int rtl838x_dma_if_rx_ring_cntr(int i)
+{
+	return RTL838X_DMA_IF_RX_RING_CNTR + ((i >> 3) << 2);
+}
+
+inline int rtl839x_dma_if_rx_ring_cntr(int i)
+{
+	return RTL839X_DMA_IF_RX_RING_CNTR + ((i >> 3) << 2);
+}
+
+inline int rtl930x_dma_if_rx_ring_cntr(int i)
+{
+	return RTL930X_DMA_IF_RX_RING_CNTR + ((i / 3) << 2);
+}
+
+inline int rtl931x_dma_if_rx_ring_cntr(int i)
+{
+	return RTL931X_DMA_IF_RX_RING_CNTR + ((i / 3) << 2);
+}
+
 extern struct rtl83xx_soc_info soc_info;
 
 /*
