@@ -21,11 +21,46 @@ ifneq ($(CONFIG_SDK)$(CONFIG_PACKAGE_kmod-b43)$(CONFIG_BRCMSMAC_USE_FW_FROM_WL),
   BUILD_B43_TOOLS = y
 endif
 
-tools-y += autoconf autoconf-archive automake bc bison cmake cpio dosfstools
-tools-y += e2fsprogs expat fakeroot findutils firmware-utils flex gengetopt
-tools-y += libressl libtool lzma m4 make-ext4fs meson missing-macros mkimage
-tools-y += mklibs mtd-utils mtools ninja padjffs2 patch-image
-tools-y += patchelf pkgconf quilt squashfskit4 sstrip zip zlib zstd
+tools-y += \
+	autoconf \
+	autoconf-archive \
+	automake \
+	bc \
+	bison \
+	cmake \
+	cpio \
+	dosfstools \
+	e2fsprogs \
+	expat \
+	fakeroot \
+	findutils \
+	firmware-utils \
+	flex \
+	gengetopt \
+	libressl \
+	libtool \
+	lzma \
+	m4 \
+	make-ext4fs \
+	meson \
+	missing-macros \
+	mkimage \
+	mklibs \
+	mtd-utils \
+	mtools \
+	ninja \
+	padjffs2 \
+	patch-image \
+	patchelf \
+	pkgconf \
+	quilt \
+	squashfskit4 \
+	sstrip \
+	zip \
+	zlib \
+	zstd \
+
+
 tools-$(if $(CONFIG_BUILD_ALL_HOST_TOOLS)$(BUILD_B43_TOOLS),y) += b43-tools
 tools-$(if $(CONFIG_BUILD_ALL_HOST_TOOLS)$(BUILD_ISL),y) += isl
 tools-$(if $(CONFIG_BUILD_ALL_HOST_TOOLS)$(BUILD_TOOLCHAIN),y) += gmp mpc mpfr
