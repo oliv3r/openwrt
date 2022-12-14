@@ -46,7 +46,7 @@ define Device/zyxel_gs1900-48
   KERNEL_INITRAMFS := \
 	kernel-bin | \
 	append-dtb | \
-	gzip | \
+	libdeflate | \
 	zyxel-vers $$$$(ZYXEL_VERS) | \
 	uImage gzip
 endef

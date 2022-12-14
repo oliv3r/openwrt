@@ -7,7 +7,7 @@ define Device/d-link_dgs-1210
   KERNEL := \
 	kernel-bin | \
 	append-dtb | \
-	gzip | \
+	libdeflate | \
 	uImage gzip | \
 	dlink-cameo
   CAMEO_KERNEL_PART := 2

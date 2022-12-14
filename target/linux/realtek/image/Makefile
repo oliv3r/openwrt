@@ -90,12 +90,12 @@ define Device/Default
   KERNEL := \
 	kernel-bin | \
 	append-dtb | \
-	gzip | \
+	libdeflate | \
 	uImage gzip
   KERNEL_INITRAMFS := \
 	kernel-bin | \
 	append-dtb | \
-	gzip | \
+	libdeflate | \
 	uImage gzip
   DEVICE_DTS_DIR := ../dts-$(KERNEL_PATCHVER)
   DEVICE_DTS = $$(SOC)_$(1)

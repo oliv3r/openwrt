@@ -70,7 +70,7 @@ define Device/engenius_ews2910p
   KERNEL_INITRAMFS := \
 	kernel-bin | \
 	append-dtb | \
-	gzip | \
+	libdeflate | \
 	uImage gzip -n 'IMG-0.00.00-c0.0.00'
 endef
 TARGET_DEVICES += engenius_ews2910p
@@ -226,7 +226,7 @@ define Device/zyxel_gs1900
   KERNEL_INITRAMFS := \
 	kernel-bin | \
 	append-dtb | \
-	gzip | \
+	libdeflate | \
 	zyxel-vers | \
 	uImage gzip
 endef
