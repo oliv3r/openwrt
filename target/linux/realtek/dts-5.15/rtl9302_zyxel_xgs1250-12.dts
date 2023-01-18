@@ -29,11 +29,6 @@
 		};
 	};
 
-	memory@0 {
-		device_type = "memory";
-		reg = <0x0 0x8000000>; /* 128 MiB */
-	};
-
 	/* i2c of the SFP cage: port 12 */
 	i2c0: i2c-rtl9300 {
 		compatible = "realtek,rtl9300-i2c";
@@ -57,6 +52,11 @@
 			function = LED_FUNCTION_POWER;
 			gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>;
 		};
+	};
+
+	memory@0 {
+		device_type = "memory";
+		reg = <0x0 0x8000000>; /* 128 MiB */
 	};
 
 	sfp0: sfp-p12 {
