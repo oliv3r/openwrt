@@ -1,0 +1,258 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+#include <dt-bindings/leds/leds-realtek.h>
+
+#include "rtl9303.dtsi"
+#include "rtl9303_common_8s.dtsi"
+
+/ {
+	compatible = "hasivo,f1100w-8splus", "realtek,rtl9303-soc", "realtek,rtl930x-soc";
+	model = "Hasivo F1100W-8S+ Switch";
+
+	aliases {
+		led-boot = &led_cpu;
+		led-failsafe = &led_cpu;
+		led-running = &led_cpu;
+		led-upgrade = &led_cpu;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led_cpu: led-cpu {
+			color = <LED_COLOR_ID_YELLOW>;
+			function = LED_FUNCTION_STATUS;
+			gpios = <&gpio0 21 GPIO_ACTIVE_LOW>;
+			panic-indicator;
+		};
+	};
+
+	led_set {
+		compatible = "realtek,rtl9302-leds", "realtek,rtl9300-leds";
+		led_set0 = /bits/ 16 <
+			/* LED0 */
+			(
+				RTL93XX_LED_SET_LINK_ACTIVITY |
+				RTL93XX_LED_SET_LINK_UP_SOLID |
+				RTL93XX_LED_SET_1000M_LINK |
+				RTL93XX_LED_SET_100M_LINK |
+				RTL93XX_LED_SET_10M_LINK
+			)
+			/* LED1 */
+			(
+				RTL93XX_LED_SET_LINK_ACTIVITY |
+				RTL93XX_LED_SET_LINK_UP_SOLID |
+				RTL93XX_LED_SET_10G_LINK
+			)
+			/* LED2 */
+			(
+				RTL93XX_LED_SET_LINK_ACTIVITY |
+				RTL93XX_LED_SET_LINK_UP_SOLID |
+				RTL93XX_LED_SET_10G_LINK
+			)
+		>;
+	};
+
+	memory@0 {
+		reg = <0x0 0x20000000>; /* 512 MiB */
+		device_type = "memory";
+	};
+};
+
+&qspif0 {
+	status = "okay";
+
+	flash@0 {
+		compatible = "macronix,mx25l25645g", "mxicy,mx25l25645g", "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <133000000>;
+
+		partitions: partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				reg = <0x0 0xe0000>;
+				label = "u-boot";
+				read-only;
+			};
+
+			partition@e0000 {
+				reg = <0xe0000 0x10000>;
+				label = "u-boot-env";
+			};
+
+			partition@f0000 {
+				compatible = "openwrt,uimage", "denx,uimage";
+				reg = <0xf0000 0x1f10000>;
+				label = "firmware";
+				openwrt,ih-magic = <0x93030000>;
+			};
+		};
+	};
+};
+
+&reset_button {
+	gpios = <&gpio0 20 GPIO_ACTIVE_LOW>;
+
+	status = "okay";
+};
+
+&sfp0 {
+	mod-def0-gpio = <&gpio0 0 GPIO_ACTIVE_LOW>;
+};
+
+&sfp1 {
+	mod-def0-gpio = <&gpio0 1 GPIO_ACTIVE_LOW>;
+};
+
+&sfp2 {
+	mod-def0-gpio = <&gpio0 2 GPIO_ACTIVE_LOW>;
+};
+
+&sfp3 {
+	mod-def0-gpio = <&gpio0 3 GPIO_ACTIVE_LOW>;
+};
+
+&sfp4 {
+	mod-def0-gpio = <&gpio0 4 GPIO_ACTIVE_LOW>;
+};
+
+&sfp5 {
+	mod-def0-gpio = <&gpio0 5 GPIO_ACTIVE_LOW>;
+};
+
+&sfp6 {
+	mod-def0-gpio = <&gpio0 6 GPIO_ACTIVE_LOW>;
+};
+
+&sfp7 {
+	mod-def0-gpio = <&gpio0 7 GPIO_ACTIVE_LOW>;
+};
+
+&switch0_ports {
+	port@0 {
+		reg = <0>;
+		label = "lan1";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-handle = <&phy0>;
+		phy-mode = "10gbase-r";
+		managed = "in-band-status";
+		sfp = <&sfp0>;
+	};
+
+	port@8 {
+		reg = <8>;
+		label = "lan2";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "10gbase-r";
+		phy-handle = <&phy8>;
+		managed = "in-band-status";
+		sfp = <&sfp1>;
+	};
+
+	port@16 {
+		reg = <16>;
+		label = "lan3";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "10gbase-r";
+		phy-handle = <&phy16>;
+		managed = "in-band-status";
+		sfp = <&sfp2>;
+	};
+
+	port@20 {
+		reg = <20>;
+		label = "lan4";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "10gbase-r";
+		phy-handle = <&phy20>;
+		managed = "in-band-status";
+		sfp = <&sfp3>;
+	};
+
+	port@24 {
+		reg = <24>;
+		label = "lan5";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "10gbase-r";
+		phy-handle = <&phy24>;
+		managed = "in-band-status";
+		sfp = <&sfp4>;
+	};
+
+	port@25 {
+		reg = <25>;
+		label = "lan6";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "10gbase-r";
+		phy-handle = <&phy25>;
+		managed = "in-band-status";
+		sfp = <&sfp5>;
+	};
+
+	port@26 {
+		reg = <26>;
+		label = "lan7";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "10gbase-r";
+		phy-handle = <&phy26>;
+		managed = "in-band-status";
+		sfp = <&sfp6>;
+	};
+
+	port@27 {
+		reg = <27>;
+		label = "lan8";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "10gbase-r";
+		phy-handle = <&phy27>;
+		managed = "in-band-status";
+		sfp = <&sfp7>;
+	};
+};

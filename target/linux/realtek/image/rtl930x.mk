@@ -34,6 +34,24 @@ define Device/ezu_next-7255gh_a2_vendor
 endef
 TARGET_DEVICES += ezu_next-7255gh_a2_vendor
 
+define Device/hasivo_f1100w-8splus
+  $(Device/kernel)
+  $(Device/initramfs)
+  DEVICE_MODEL := F1100W-8S+ A2
+  DEVICE_VENDOR := Hasivo
+  IMAGE_SIZE := 31808k
+  SOC := rtl9303
+  UIMAGE_MAGIC := 0x93030000
+endef
+TARGET_DEVICES += hasivo_f1100w-8splus
+
+define Device/hasivo_f1100w-8splus_vendor
+  $(Device/hasivo_f1100w-8splus)
+  DEVICE_MODEL := F1100W-8S+ A2 (vendor)
+  IMAGE_SIZE := 29696k
+endef
+TARGET_DEVICES += hasivo_f1100w-8splus_vendor
+
 define Device/mestechs_msg9424
   $(Device/kernel)
   $(Device/initramfs)
