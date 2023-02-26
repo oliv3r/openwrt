@@ -52,6 +52,24 @@ define Device/tp-link_tl-st1008f_v2.0_vendor
 endef
 TARGET_DEVICES += tp-link_tl-st1008f_v2.0_vendor
 
+define Device/ubiquiti-usw-aggregation
+  $(Device/kernel)
+  $(Device/initramfs)
+  DEVICE_MODEL := USW-Aggregation
+  DEVICE_VENDOR := Ubiquiti
+  IMAGE_SIZE := 15424k
+  SOC := rtl9303
+  UIMAGE_MAGIC := 0x93030000
+endef
+TARGET_DEVICES += ubiquiti-usw-aggregation
+
+define Device/ubiquiti-usw-aggregation_vendor
+  $(Device/ubiquiti-usw-aggregation)
+  DEVICE_MODEL := USW-Aggregation (vendor)
+  IMAGE_SIZE := 7232k
+endef
+TARGET_DEVICES += ubiquiti-usw-aggregation_vendor
+
 define Device/whitelabel_ws-sw-24p-4s_r1_v1.0
   $(Device/kernel)
   $(Device/initramfs)
