@@ -79,15 +79,29 @@
 		clock-frequency  = <175000000>;
 	};
 
-	soc: soc {
-		compatible = "simple-bus";
+	lxp: lexra-busp {
+		compatible = "lexra-bus", "simple-bus";
 		#address-cells = <1>;
 		#size-cells = <1>;
-		ranges = <0x0 0x18000000 0x10000>;
+		ranges = <0x18000000 0x18000000 0x200000>;
 
-		intc: interrupt-controller@3000 {
+		gpio0: gpio-controller@18003300 {
+			compatible = "realtek,rtl9300-gpio", "realtek,otto-gpio";
+			reg = <0x18003300 0x1c>, <0x18003338 0x8>;
+
+			gpio-controller;
+			#gpio-cells = <2>;
+			ngpios = <24>;
+
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			interrupt-parent = <&intc>;
+			interrupts = <13 1>;
+		};
+
+		intc: interrupt-controller@18003000 {
 			compatible = "realtek,rtl9300-intc", "realtek,rtl-intc";
-			reg = <0x3000 0x18>, <0x3018 0x18>;
+			reg = <0x18003000 0x18>, <0x18003018 0x18>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
 
@@ -95,27 +109,30 @@
 			interrupts = <2>, <3>, <4>, <5>, <6>, <7>;
 		};
 
-		spi0: spi@1200 {
+		spi0: spi@18001200 {
 			compatible = "realtek,rtl8380-spi";
-			reg = <0x1200 0x100>;
+			reg = <0x18001200 0x100>;
 
 			#address-cells = <1>;
 			#size-cells = <0>;
 		};
 
-		timer0: timer@3200 {
+		timer0: timer@18003200 {
 			compatible = "realtek,rtl930x-timer", "realtek,otto-timer";
-			reg = <0x3200 0x10>, <0x3210 0x10>, <0x3220 0x10>,
-			      <0x3230 0x10>, <0x3240 0x10>;
+			reg = <0x18003200 0x10>,
+			      <0x18003210 0x10>,
+			      <0x18003220 0x10>,
+			      <0x18003230 0x10>,
+			      <0x18003240 0x10>;
 
 			interrupt-parent = <&intc>;
 			interrupts = <7 4>, <8 4>, <9 4>, <10 4>, <11 4>;
 			clocks = <&lx_clk>;
 		};
 
-		uart0: uart@2000 {
+		uart0: uart@18002000 {
 			compatible = "ns16550a";
-			reg = <0x2000 0x100>;
+			reg = <0x18002000 0x100>;
 
 			clocks = <&lx_clk>;
 
@@ -128,9 +145,9 @@
 			no-loopback-test;
 		};
 
-		uart1: uart@2100 {
+		uart1: uart@18002100 {
 			compatible = "ns16550a";
-			reg = <0x2100 0x100>;
+			reg = <0x18002100 0x100>;
 
 			clocks = <&lx_clk>;
 
@@ -145,9 +162,9 @@
 			status = "disabled";
 		};
 
-		watchdog0: watchdog@3260 {
+		watchdog0: watchdog@18003260 {
 			compatible = "realtek,rtl9300-wdt";
-			reg = <0x3260 0xc>;
+			reg = <0x18003260 0xc>;
 
 			realtek,reset-mode = "soc";
 
@@ -158,58 +175,49 @@
 			interrupt-names = "phase1", "phase2";
 			interrupts = <5 4>, <6 4>;
 		};
+	};
 
-		gpio0: gpio-controller@3300 {
-			compatible = "realtek,rtl9300-gpio", "realtek,otto-gpio";
-			reg = <0x3300 0x1c>, <0x3338 0x8>;
+	lx0: lexra-bus0 {
+		compatible = "lexra-bus", "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0x1b000000 0x1b000000 0x10000>;
 
-			gpio-controller;
-			#gpio-cells = <2>;
-			ngpios = <24>;
+		ethernet0: ethernet@1b00a300 {
+			compatible = "realtek,rtl838x-eth";
+			reg = <0x1b00a300 0x100>;
 
-			interrupt-controller;
-			#interrupt-cells = <2>;
 			interrupt-parent = <&intc>;
-			interrupts = <13 1>;
+			interrupts = <24 3>;
+
+			phy-mode = "internal";
+
+			fixed-link {
+				speed = <1000>;
+				full-duplex;
+			};
 		};
 
-	};
+		pinmux_led: pinmux@1b00cc00 {
+			compatible = "pinctrl-single";
+			reg = <0x1b00cc00 0x4>;
 
-	pinmux_led: pinmux@1b00cc00 {
-		compatible = "pinctrl-single";
-		reg = <0x1b00cc00 0x4>;
+			pinctrl-single,bit-per-mux;
+			pinctrl-single,register-width = <32>;
+			pinctrl-single,function-mask = <0x1>;
+			#pinctrl-cells = <2>;
 
-		pinctrl-single,bit-per-mux;
-		pinctrl-single,register-width = <32>;
-		pinctrl-single,function-mask = <0x1>;
-		#pinctrl-cells = <2>;
-
-		/* enable GPIO 0 */
-		pinmux_disable_sys_led: disable_sys_led {
-			pinctrl-single,bits = <0x0 0x0 0x1000>;
+			/* enable GPIO 0 */
+			pinmux_disable_sys_led: disable_sys_led {
+				pinctrl-single,bits = <0x0 0x0 0x1000>;
+			};
 		};
-	};
 
-	ethernet0: ethernet@1b00a300 {
-		compatible = "realtek,rtl838x-eth";
-		reg = <0x1b00a300 0x100>;
+		switch0: switch@1b000000 {
+			compatible = "realtek,rtl83xx-switch";
 
-		interrupt-parent = <&intc>;
-		interrupts = <24 3>;
-
-		phy-mode = "internal";
-
-		fixed-link {
-			speed = <1000>;
-			full-duplex;
+			interrupt-parent = <&intc>;
+			interrupts = <23 2>;
 		};
-	};
-
-	switch0: switch@1b000000 {
-		compatible = "realtek,rtl83xx-switch";
-		status = "okay";
-
-		interrupt-parent = <&intc>;
-		interrupts = <23 2>;
 	};
 };
