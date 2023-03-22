@@ -213,11 +213,28 @@
 			};
 		};
 
-		switch0: switch@1b000000 {
+		switch@1b000000 {
 			compatible = "realtek,rtl83xx-switch";
 
 			interrupt-parent = <&intc>;
 			interrupts = <23 2>;
+
+			switch0_ports: ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				/* Internal SoC <-> Switch ethernet connection */
+				port@28 {
+					reg = <28>;
+					ethernet = <&ethernet0>;
+					phy-mode = "internal";
+
+					fixed-link {
+						speed = <1000>;
+						full-duplex;
+					};
+				};
+			};
 		};
 	};
 };
