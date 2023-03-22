@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR MIT)
+/dts-v1/;
+
+#include "rtl9303_ezu_next-7255gh_a2.dts"
+
+/ {
+	model = "Eeasy-Net Ubiquitous NEXT 7255GH (A2) Switch (vendor)";
+};
+
+&partitions {
+	/delete-node/ partition@f0000;
+
+	partition@f0000 {
+		reg = <0xf0000 0x10000>;
+		label = "sysinfo";
+	};
+
+	partition@100000 {
+		label = "jffs-cfg";
+		reg = <0x100000 0x100000>;
+		read-only;
+	};
+
+	partition@200000 {
+		label = "jffs-log";
+		reg = <0x200000 0x100000>;
+	};
+
+	partition@300000 {
+		reg = <0x300000 0xd00000>;
+		compatible = "openwrt,uimage", "denx, uimage";
+		label = "firmware";
+		openwrt,ih-magic = <0x93030000>;
+	};
+};

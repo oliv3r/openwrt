@@ -16,6 +16,24 @@ define Device/initramfs
     uImage lzma
 endef
 
+define Device/ezu_next-7255gh_a2
+  $(Device/kernel)
+  $(Device/initramfs)
+  DEVICE_MODEL := NEXT-7255GH A2
+  DEVICE_VENDOR := EZ-NET Ubiquitous
+  IMAGE_SIZE := 15424k
+  SOC := rtl9303
+  UIMAGE_MAGIC := 0x93030000
+endef
+TARGET_DEVICES += ezu_next-7255gh_a2
+
+define Device/ezu_next-7255gh_a2_vendor
+  $(Device/ezu_next-7255gh_a2)
+  DEVICE_MODEL := NEXT-7255GH A2 (vendor)
+  IMAGE_SIZE := 13312k
+endef
+TARGET_DEVICES += ezu_next-7255gh_a2_vendor
+
 define Device/mestechs_msg9424
   $(Device/kernel)
   $(Device/initramfs)
