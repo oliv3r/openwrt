@@ -13,6 +13,85 @@
 #define RTL930X_MAC_L2_PORT_CTRL(port)		(0x3268 + (((port) << 6)))
 #define RTL930X_MAC_PORT_CTRL(port)		(0x3260 + (((port) << 6)))
 
+/* MDIO controller */
+#define RTL930X_SMI_GLB_CTRL_REG                (0xca00)
+/* Reserved                                             31 - 29 */
+#define RTL930X_SMI_GLB_CTRL_RESET                      BIT(28)
+#define RTL930X_SMI_GLB_CTRL_PARK                       GENMASK(27, 24)
+#define RTL930X_SMI_GLB_CTRL_POLL_INTERNAL              GENMASK(23, 20)
+#define RTL930X_SMI_GLB_CTRL_INTF_CLAUSE_45             GENMASK(19, 16)
+#define _RTL930X_SMI_GLB_CTRL_FREQ_SEL_MASK             GENMASK(15, 8)
+#define RTL930X_SMI_GLB_CTRL_FREQ_SEL_1M25Hz                    0x0
+#define RTL930X_SMI_GLB_CTRL_FREQ_SEL_2M5Hz                     0x1
+#define RTL930X_SMI_GLB_CTRL_FREQ_SEL_5MHz                      0x2
+#define RTL930X_SMI_GLB_CTRL_FREQ_SEL_10MHz                     0x3
+#define RTL930X_SMI_GLB_CTRL_FREQ_SEL(chan, freq) \
+        (((freq) << (8 + ((chan) * 2))) & _RTL930X_SMI_GLB_CTRL_FREQ_SEL_MASK)
+#define RTL930X_SMI_GLB_CTRL_PREAMBLE_1BIT              GENMASK(7, 4)
+#define RTL930X_SMI_GLB_CTRL_BROADCAST_EN               GENMASK(3, 0)
+
+#define RTL930X_SMI_MAC_TYPE_CTRL_REG           (0xca04)
+/* Reserved                                             31 - 25 */
+#define RTL930X_SMI_MAC_TYPE_CTRL_P27_TYPE              GENMASK(23, 21)
+#define RTL930X_SMI_MAC_TYPE_CTRL_P26_TYPE              GENMASK(20, 18)
+#define RTL930X_SMI_MAC_TYPE_CTRL_P25_TYPE              GENMASK(17, 15)
+#define RTL930X_SMI_MAC_TYPE_CTRL_P24_TYPE              GENMASK(14, 12)
+#define RTL930X_SMI_MAC_TYPE_CTRL_P23_P20_TYPE          GENMASK(11, 10)
+#define RTL930X_SMI_MAC_TYPE_CTRL_P19_P16_TYPE          GENMASK(9, 8)
+#define RTL930X_SMI_MAC_TYPE_CTRL_P15_P12_TYPE          GENMASK(7, 6)
+#define RTL930X_SMI_MAC_TYPE_CTRL_P11_P8_TYPE           GENMASK(5, 4)
+#define RTL930X_SMI_MAC_TYPE_CTRL_P7_P4_TYPE            GENMASK(3, 2)
+#define RTL930X_SMI_MAC_TYPE_CTRL_P3_P0_TYPE            GENMASK(1, 0)
+#define _RTL930X_SMI_MAC_TYPE_CTRL_MASK                 GENMASK(1, 0)
+#define RTL930X_SMI_MAC_TYPE_CTRL_SFP_1G_10G                    0x0
+#define RTL930X_SMI_MAC_TYPE_CTRL_COPPER_2G5_5G_10G             0x1
+#define RTL930X_SMI_MAC_TYPE_CTRL_COPPER_100M                   0x2
+#define RTL930X_SMI_MAC_TYPE_CTRL_COPPER_1000M                  0x3
+/* Reserved                                                     0x4 - 0x7 */
+#define RTL930X_SMI_MAC_TYPE_CTRL_PORT(port, type) \
+        (((type) & _RTL930X_SMI_MAC_TYPE_CTRL_MASK) << (port))
+
+#define RTL930X_SMI_MAC_POLL_SEL_REG(port)         ((0xca08) + REALTEK_REG_PORT_OFFSET((port), 2, 0x4))
+#define _RTL930X_SMI_MAC_POLL_SEL_MASK                  GENMASK(1, 0)
+#define RTL930X_SMI_MAC_SPOLL_SEL_C22_STD                       0x0
+#define RTL930X_SMI_MAC_SPOLL_SEL_C22_PROP                      0x1
+#define RTL930X_SMI_MAC_SPOLL_SEL_C45_STD                       0x2
+#define RTL930X_SMI_MAC_SPOLL_SEL_C45_PROP                      0x3
+#define RTL930X_SMI_MAC_POLL_SEL(port, type) \
+        (((type) & _RTL930X_SMI_MAC_POLL_SEL_MASK) << REALTEK_REG_PORT_INDEX(port, 2))
+
+#define RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_REG   (0xca10)
+#define RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_ALLOW(port) \
+        BIT(port)
+
+#define RTL930X_SMI_PORT_ADDR_REG(port)         ((0xcb80) + REALTEK_REG_PORT_OFFSET((port), 5, 0x4))
+#define _RTL930X_SMI_PORT_ADDR_MASK                     GENMASK(4, 0)
+#define RTL930X_SMI_PORT_ADDR(port, addr) \
+	(((addr) & _RTL930X_SMI_PORT_ADDR_MASK) << REALTEK_REG_PORT_INDEX(port, 5))
+
+#define RTL930X_SMI_10GPHY_POLL_SEL_REG         (0xcbb0)
+/* Reserved                                             31 - 21 */
+#define RTL930X_SMI_10GPHY_POLL_SEL_INT_DEVAD           GENMASK(20, 16)
+#define RTL930X_SMI_10GPHY_POLL_SEL_INT_REGAD           GENMASK(15, 0)
+
+#define RTL930X_SMI_10GPHY_POLL_REG0_CFG_REG    (0xcbb4)
+/* Reserved                                             31 - 25 */
+#define RTL930X_SMI_10GPHY_POLL_REG0_BIT                GENMASK(24, 21)
+#define RTL930X_SMI_10GPHY_POLL_REG0_DEVAD              GENMASK(20, 16)
+#define RTL930X_SMI_10GPHY_POLL_REG0_REGAD              GENMASK(15, 0)
+
+#define RTL930X_SMI_10GPHY_POLL_REG9_CFG_REG    (0xcbb8)
+/* Reserved                                             31 - 25 */
+#define RTL930X_SMI_10GPHY_POLL_REG9_BIT                GENMASK(24, 21)
+#define RTL930X_SMI_10GPHY_POLL_REG9_DEVAD              GENMASK(20, 16)
+#define RTL930X_SMI_10GPHY_POLL_REG9_REGAD              GENMASK(15, 0)
+
+#define RTL930X_SMI_10GPHY_POLL_REG10_CFG_REG    (0xcbbc)
+/* Reserved                                             31 - 25 */
+#define RTL930X_SMI_10GPHY_POLL_REG10_BIT               GENMASK(24, 21)
+#define RTL930X_SMI_10GPHY_POLL_REG10_DEVAD             GENMASK(20, 16)
+#define RTL930X_SMI_10GPHY_POLL_REG10_REGAD             GENMASK(15, 0)
+
 /* Packet statistics */
 #define RTL930X_STAT_CTRL			(0x3248)
 #define RTL930X_STAT_PORT_MIB_CNTR		(0x0664)

@@ -2495,7 +2495,7 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 	sw_w32(poll_sel[1], RTL930X_SMI_PORT16_27_POLLING_SEL);
 
 	/* Disable POLL_SEL for any SMI bus with a normal PHY (not RTL8295R for SFP+) */
-	sw_w32_mask(poll_ctrl, 0, RTL930X_SMI_GLB_CTRL);
+	sw_w32_mask(poll_ctrl, 0, RTL930X_SMI_GLB_CTRL_REG);
 
 	/* Configure which SMI busses are polled in c45 based on a c45 PHY being on that bus */
 	for (int i = 0; i < 4; i++)
