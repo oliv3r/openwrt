@@ -2460,14 +2460,21 @@ static int rtl839x_mdio_reset(struct mii_bus *bus)
 	return 0;
 }
 
-u8 mac_type_bit[RTL930X_PORT_CPU] = {0, 0, 0, 0, 2, 2, 2, 2, 4, 4, 4, 4, 6, 6, 6, 6,
-				     8, 8, 8, 8, 10, 10, 10, 10, 12, 15, 18, 21};
+static const int rtl930x_smi_mac_type_port_offset[RTL930X_PORT_CPU] = {
+	 0,  0,  0,  0, /* Port  0 -  3 */
+	 2,  2,  2,  2, /* Port  4 -  7 */
+	 4,  4,  4,  4, /* Port  8 - 11 */
+	 6,  6,  6,  6, /* Port 12 - 15 */
+	 8,  8,  8,  8, /* Port 16 - 19 */
+	10, 10, 10, 10, /* Port 20 - 23 */
+	12, 15, 18, 21, /* Port 24 - 27 */
+};
 
 static int rtl930x_mdio_reset(struct mii_bus *bus)
 {
 	struct rtl838x_eth_priv *priv = bus->priv;
+	u32 poll_sel[REALTEK_PORT_ARRAY_SIZE(RTL930X_PORT_CPU, 2)] = { 0x0 };
 	u32 c45_mask = 0;
-	u32 poll_sel[2];
 	u32 poll_ctrl = 0;
 	u32 private_poll_mask = 0;
 	u32 v;
@@ -2475,35 +2482,32 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 	bool uses_hisgmii = false; /* For the RTL8221/8226 */
 
 	/* Mapping of port to phy-addresses on an SMI bus */
-	poll_sel[0] = poll_sel[1] = 0;
-	for (int i = 0; i < RTL930X_PORT_CNT; i++) {
-		int pos;
-
-		if (priv->smi_bus[i] >= MAX_SMI_BUSSES)
+	for (int port = 0; port < REALTEK_PORT_ARRAY_SIZE(priv->cpu_port, 2); port++) {
+		if (priv->smi_bus[port] >= MAX_SMI_BUSSES)
 			continue;
-		pos = (i % 6) * 5;
-		sw_w32_mask(0x1f << pos, priv->smi_addr[i] << pos,
-			    RTL930X_SMI_PORT0_5_ADDR + (i / 6) * 4);
 
-		pos = (i * 2) % 32;
-		poll_sel[i / 16] |= priv->smi_bus[i] << pos;
-		poll_ctrl |= BIT(20 + priv->smi_bus[i]);
+		sw_w32_mask(RTL930X_SMI_PORT_ADDR(port, _RTL930X_SMI_PORT_ADDR_MASK),
+		            RTL930X_SMI_PORT_ADDR(port, priv->smi_addr[port]),
+		            RTL930X_SMI_PORT_ADDR_REG(port));
+
+		poll_sel[REALTEK_PORT_ARRAY_INDEX(port, 2)] |= RTL930X_SMI_MAC_POLL_SEL(port, priv->smi_bus[port]);
+		poll_ctrl |= FIELD_PREP(RTL930X_SMI_GLB_CTRL_POLL_INTERNAL, priv->smi_bus[port]);
 	}
 
 	/* Configure which SMI bus is behind which port number */
-	sw_w32(poll_sel[0], RTL930X_SMI_PORT0_15_POLLING_SEL);
-	sw_w32(poll_sel[1], RTL930X_SMI_PORT16_27_POLLING_SEL);
+	for (int i = 0; i < REALTEK_PORT_ARRAY_SIZE(priv->cpu_port, 2); i++)
+		sw_w32(poll_sel[i], RTL930X_SMI_MAC_POLL_SEL_REG(i));
 
 	/* Disable POLL_SEL for any SMI bus with a normal PHY (not RTL8295R for SFP+) */
 	sw_w32_mask(poll_ctrl, 0, RTL930X_SMI_GLB_CTRL_REG);
 
 	/* Configure which SMI busses are polled in c45 based on a c45 PHY being on that bus */
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < MAX_SMI_BUSSES; i++)
 		if (priv->smi_bus_isc45[i])
-			c45_mask |= BIT(i + 16);
+			c45_mask |= FIELD_PREP(RTL930X_SMI_GLB_CTRL_INTF_CLAUSE_45, i);
 
 	pr_info("c45_mask: %08x\n", c45_mask);
-	sw_w32_mask(0, c45_mask, RTL930X_SMI_GLB_CTRL);
+	sw_w32_mask(0, c45_mask, RTL930X_SMI_GLB_CTRL_REG);
 
 	/* Set the MAC type of each port according to the PHY-interface */
 	/* Values are FE: 2, GE: 3, XGE/2.5G: 0(SERDES) or 1(otherwise), SXGE: 0 */
@@ -2513,56 +2517,76 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 		case PHY_INTERFACE_MODE_10GBASER:
 			break;			/* Serdes: Value = 0 */
 		case PHY_INTERFACE_MODE_HSGMII:
-			private_poll_mask |= BIT(i);
+			private_poll_mask |= RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_ALLOW(i);
 			/* fallthrough */
 		case PHY_INTERFACE_MODE_USXGMII:
-			v |= BIT(mac_type_bit[i]);
+			v |= RTL930X_SMI_MAC_TYPE_CTRL_PORT(rtl930x_smi_mac_type_port_offset[i],
+			                                    RTL930X_SMI_MAC_TYPE_CTRL_COPPER_2G5_5G_10G);
 			uses_usxgmii = true;
 			break;
 		case PHY_INTERFACE_MODE_QSGMII:
-			private_poll_mask |= BIT(i);
-			v |= 3 << mac_type_bit[i];
+			private_poll_mask |= RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_ALLOW(i);
+			v |= RTL930X_SMI_MAC_TYPE_CTRL_PORT(rtl930x_smi_mac_type_port_offset[i],
+			                                    RTL930X_SMI_MAC_TYPE_CTRL_COPPER_1000M);
 			break;
 		default:
 			break;
 		}
 	}
-	sw_w32(v, RTL930X_SMI_MAC_TYPE_CTRL);
+	sw_w32(v, RTL930X_SMI_MAC_TYPE_CTRL_REG);
 
 	/* Set the private polling mask for all Realtek PHYs (i.e. not the 10GBit Aquantia ones) */
-	sw_w32(private_poll_mask, RTL930X_SMI_PRVTE_POLLING_CTRL);
+	sw_w32(private_poll_mask, RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_REG);
 
 	/* The following magic values are found in the port configuration, they seem to
 	 * define different ways of polling a PHY. The below is for the Aquantia PHYs of
 	 * the XGS1250 and the RTL8226 of the XGS1210
 	 */
 	if (uses_usxgmii) {
-		sw_w32(0x01010000, RTL930X_SMI_10GPHY_POLLING_REG0_CFG);
-		sw_w32(0x01E7C400, RTL930X_SMI_10GPHY_POLLING_REG9_CFG);
-		sw_w32(0x01E7E820, RTL930X_SMI_10GPHY_POLLING_REG10_CFG);
+		sw_w32(FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG0_BIT, 8) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG0_DEVAD, 1) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG0_REGAD, 0x0000),
+		       RTL930X_SMI_10GPHY_POLL_REG0_CFG_REG);
+		sw_w32(FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG9_BIT, 15) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG9_DEVAD, 7) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG9_REGAD, 0xc400),
+		       RTL930X_SMI_10GPHY_POLL_REG9_CFG_REG);
+		sw_w32(FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG10_BIT, 15) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG10_DEVAD, 7) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG10_REGAD, 0xe820),
+		       RTL930X_SMI_10GPHY_POLL_REG10_CFG_REG);
 	}
 	if (uses_hisgmii) {
-		sw_w32(0x011FA400, RTL930X_SMI_10GPHY_POLLING_REG0_CFG);
-		sw_w32(0x013FA412, RTL930X_SMI_10GPHY_POLLING_REG9_CFG);
-		sw_w32(0x017FA414, RTL930X_SMI_10GPHY_POLLING_REG10_CFG);
+		sw_w32(FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG0_BIT, 8) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG0_DEVAD, 31) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG0_REGAD, 0xa400),
+		       RTL930X_SMI_10GPHY_POLL_REG0_CFG_REG);
+		sw_w32(FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG9_BIT, 9) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG9_DEVAD, 31) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG9_REGAD, 0xa412),
+		       RTL930X_SMI_10GPHY_POLL_REG9_CFG_REG);
+		sw_w32(FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG10_BIT, 11) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG10_DEVAD, 31) |
+		       FIELD_PREP(RTL930X_SMI_10GPHY_POLL_REG10_REGAD, 0xa414),
+		       RTL930X_SMI_10GPHY_POLL_REG10_CFG_REG);
 	}
 
-	pr_debug("%s: RTL930X_SMI_GLB_CTRL %08x\n", __func__,
-		 sw_r32(RTL930X_SMI_GLB_CTRL));
-	pr_debug("%s: RTL930X_SMI_PORT0_15_POLLING_SEL %08x\n", __func__,
-		 sw_r32(RTL930X_SMI_PORT0_15_POLLING_SEL));
-	pr_debug("%s: RTL930X_SMI_PORT16_27_POLLING_SEL %08x\n", __func__,
-		 sw_r32(RTL930X_SMI_PORT16_27_POLLING_SEL));
-	pr_debug("%s: RTL930X_SMI_MAC_TYPE_CTRL %08x\n", __func__,
-		 sw_r32(RTL930X_SMI_MAC_TYPE_CTRL));
-	pr_debug("%s: RTL930X_SMI_10GPHY_POLLING_REG0_CFG %08x\n", __func__,
-		 sw_r32(RTL930X_SMI_10GPHY_POLLING_REG0_CFG));
-	pr_debug("%s: RTL930X_SMI_10GPHY_POLLING_REG9_CFG %08x\n", __func__,
-		 sw_r32(RTL930X_SMI_10GPHY_POLLING_REG9_CFG));
-	pr_debug("%s: RTL930X_SMI_10GPHY_POLLING_REG10_CFG %08x\n", __func__,
-		 sw_r32(RTL930X_SMI_10GPHY_POLLING_REG10_CFG));
-	pr_debug("%s: RTL930X_SMI_PRVTE_POLLING_CTRL %08x\n", __func__,
-		 sw_r32(RTL930X_SMI_PRVTE_POLLING_CTRL));
+	pr_debug("%s: RTL930X_SMI_GLB_CTRL_REG %08x\n", __func__,
+		 sw_r32(RTL930X_SMI_GLB_CTRL_REG));
+	pr_debug("%s: RTL930X_SMI_MAC_POLL_SEL_REG (0 - 15) %08x\n", __func__,
+		 sw_r32(RTL930X_SMI_MAC_POLL_SEL_REG(0)));
+	pr_debug("%s: RTL930X_SMI_MAC_POLL_SEL_REG (16 - 27) %08x\n", __func__,
+		 sw_r32(RTL930X_SMI_MAC_POLL_SEL_REG(16)));
+	pr_debug("%s: RTL930X_SMI_MAC_TYPE_CTRL_REG %08x\n", __func__,
+		 sw_r32(RTL930X_SMI_MAC_TYPE_CTRL_REG));
+	pr_debug("%s: RTL930X_SMI_10GPHY_POLL_REG0_CFG_REG %08x\n", __func__,
+		 sw_r32(RTL930X_SMI_10GPHY_POLL_REG0_CFG_REG));
+	pr_debug("%s: RTL930X_SMI_10GPHY_POLL_REG9_CFG_REG %08x\n", __func__,
+		 sw_r32(RTL930X_SMI_10GPHY_POLL_REG9_CFG_REG));
+	pr_debug("%s: RTL930X_SMI_10GPHY_POLL_REG10_CFG_REG %08x\n", __func__,
+		 sw_r32(RTL930X_SMI_10GPHY_POLL_REG10_CFG_REG));
+	pr_debug("%s: RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_REG %08x\n", __func__,
+		 sw_r32(RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_REG));
 
 	return 0;
 }
