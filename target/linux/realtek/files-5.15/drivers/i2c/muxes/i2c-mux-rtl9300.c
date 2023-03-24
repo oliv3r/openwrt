@@ -209,7 +209,7 @@ static int rtl9300_i2c_mux_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, muxc);
 
-	for_each_child_of_node(node, child) {
+	for_each_available_child_of_node(node, child) {
 		u32 chan;
 		u32 pin;
 
