@@ -1,0 +1,183 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later or MIT)
+/dts-v1/;
+
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/leds/common.h>
+#include <dt-bindings/leds/leds-realtek.h>
+
+#include "rtl9303.dtsi"
+
+/ {
+	compatible = "hasivo,s600w-gt-se", "realtek,rtl9303-soc", "realtek,rtl930x-soc";
+	model = "Hasivo S600WP-GT-SE Switch";
+
+	led_set: led_set@0 {
+		compatible = "realtek,rtl9300-leds";
+		led_set0 = /bits/ 16 <
+			/* LED0 */
+			(
+				RTL93XX_LED_SET_LINK_ACTIVITY |
+				RTL93XX_LED_SET_LINK_UP_SOLID |
+				RTL93XX_LED_SET_2G5_LINK
+			)
+			/* LED1 */
+			(
+				RTL93XX_LED_SET_LINK_ACTIVITY |
+				RTL93XX_LED_SET_LINK_UP_SOLID |
+				RTL93XX_LED_SET_1000M_LINK |
+				RTL93XX_LED_SET_100M_LINK |
+				RTL93XX_LED_SET_10M_LINK
+			)
+		>;
+	};
+
+	memory@0 {
+		reg = <0x0 0x8000000>; /* 128 MiB */
+		device_type = "memory";
+	};
+};
+
+&reset_button {
+	gpios = <&gpio0 5 GPIO_ACTIVE_LOW>;
+
+	status = "okay";
+};
+
+&qspif0 {
+	status = "okay";
+	flash: fm25q128@0 {
+		compatible = "fudan,fm25q128", "jedec,spi-nor";
+		reg = <0>;
+		spi-max-frequency = <104000000>;
+
+		partitions: partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				reg = <0x0 0xe0000>;
+				label = "u-boot";
+				read-only;
+			};
+
+			partition@e0000 {
+				reg = <0xe0000 0x10000>;
+				label = "u-boot-env";
+			};
+
+			partition@f0000 {
+				compatible = "openwrt,uimage", "denx,uimage";
+				label = "firmware";
+				reg = <0xf0000 0xf10000>;
+				openwrt,ih-magic = <0x93030000>;
+			};
+		};
+	};
+};
+
+&mdio0 {
+	/* External RTL8221B 2.5G phy */
+	phy0: ethernet-phy@0 {
+		reg = <0>;
+		compatible = "ethernet-phy-ieee802.3-c45";
+		rtl9300,smi-address = <0 1>;
+		sds = <2>;
+	};
+
+	phy1: ethernet-phy@1 {
+		reg = <1>;
+		compatible = "ethernet-phy-ieee802.3-c45";
+		rtl9300,smi-address = <0 2>;
+		sds = <3>;
+	};
+
+	phy2: ethernet-phy@2 {
+		reg = <2>;
+		compatible = "ethernet-phy-ieee802.3-c45";
+		rtl9300,smi-address = <0 3>;
+		sds = <4>;
+	};
+
+	phy3: ethernet-phy@3 {
+		reg = <3>;
+		compatible = "ethernet-phy-ieee802.3-c45";
+		rtl9300,smi-address = <0 4>;
+		sds = <5>;
+	};
+
+	phy4: ethernet-phy@4 {
+		reg = <4>;
+		compatible = "ethernet-phy-ieee802.3-c45";
+		rtl9300,smi-address = <1 1>;
+		sds = <6>;
+	};
+};
+
+&switch0_ports {
+	port@0 {
+		reg = <0>;
+		label = "lan1";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "hsgmii";
+		phy-handle = <&phy0>;
+	};
+
+	port@8 {
+		reg = <8>;
+		label = "lan2";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "hsgmii";
+		phy-handle = <&phy1>;
+	};
+
+	port@16 {
+		reg = <16>;
+		label = "lan3";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "hsgmii";
+		phy-handle = <&phy2>;
+	};
+
+	port@20 {
+		reg = <20>;
+		label = "lan4";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "hsgmii";
+		phy-handle = <&phy3>;
+	};
+
+	port@24 {
+		reg = <24>;
+		label = "lan5";
+		led-num = <(
+			RTL93XX_LED_NUM0 | /* Orange */
+			RTL93XX_LED_NUM1 | /* Lime */
+			RTL93XX_LED_NUM2   /* Lime */
+		)>;
+		led-set = <0>;
+		phy-mode = "hsgmii";
+		phy-handle = <&phy4>;
+	};
+};

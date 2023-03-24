@@ -162,6 +162,9 @@ if macaddr_valid "${label_mac:-}" > '/dev/null' && \
 fi
 
 case $board in
+hasivo,s600w-gt-se)
+	ucidef_set_poe 55 "$lan_list" "lan5"
+	;;
 netgear,gs110tpp-v1)
 	ucidef_set_poe 130 "$lan_list" "lan9 lan10"
 	;;

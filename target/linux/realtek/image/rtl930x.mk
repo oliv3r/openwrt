@@ -52,6 +52,26 @@ define Device/hasivo_f1100w-8splus_vendor
 endef
 TARGET_DEVICES += hasivo_f1100w-8splus_vendor
 
+define Device/hasivo_s600wp-5gt-se
+  $(Device/initramfs)
+  $(Device/kernel)
+  DEVICE_MODEL := S600WP-5GT-SE
+  DEVICE_VENDOR := Hasivo
+  IMAGE_SIZE := 15424k
+  SOC := rtl9303
+  UIMAGE_MAGIC := 0x93030000
+endef
+TARGET_DEVICES += hasivo_s600wp-5gt-se
+
+define Device/hasivo_s600wp-5gt-se_vendor
+  $(Device/hasivo_s600wp-5gt-se)
+  DEVICE_MODEL := S600WP-5GT-SE (vendor)
+  IMAGE_SIZE := 12288k
+endef
+TARGET_DEVICES += hasivo_s600wp-5gt-se_vendor
+
+
+TARGET_DEVICES += hasivo_s1100wp-8gt-se_vendor
 define Device/hasivo_s1100wp-8gt-se
   $(Device/kernel)
   $(Device/initramfs)
