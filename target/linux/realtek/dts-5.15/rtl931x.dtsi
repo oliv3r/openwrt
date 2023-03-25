@@ -83,7 +83,7 @@
 		#size-cells = <1>;
 		ranges = <0x0 0x18000000 0x10000>;
 
-		spi0: spi@1200 {
+		qspif0: spi@1200 {
 			status = "okay";
 
 			compatible = "realtek,rtl8380-spi";

@@ -109,7 +109,7 @@
 			interrupts = <2>, <3>, <4>, <5>, <6>, <7>;
 		};
 
-		spi0: spi@18001200 {
+		qspif0: qspif@18001200 {
 			compatible = "realtek,rtl8380-spi";
 			reg = <0x18001200 0x100>;
 

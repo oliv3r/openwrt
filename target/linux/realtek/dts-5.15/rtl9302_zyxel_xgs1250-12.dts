@@ -142,7 +142,7 @@
 	status = "okay";
 };
 
-&spi0 {
+&qspif0 {
 	status = "okay";
 	flash@0 {
 		compatible = "jedec,spi-nor";
