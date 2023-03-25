@@ -191,6 +191,7 @@
 			interrupts = <24 3>;
 
 			phy-mode = "internal";
+			mdio-bus = <&mdio0>;
 
 			fixed-link {
 				speed = <1000>;
@@ -388,6 +389,12 @@
 				scl-pin = <17>;
 				status = "disabled";
 			};
+		};
+
+		mdio0: mdio-bus@1b00ca00 {
+			compatible = "realtek,rtl930x-mdio", "realtek,rtl838x-mdio";
+			#address-cells = <1>;
+			#size-cells = <0>;
 		};
 
 		pinmux_led: pinmux@1b00cc00 {

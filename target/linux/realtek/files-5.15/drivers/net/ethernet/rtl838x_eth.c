@@ -2115,10 +2115,12 @@ static int rtl838x_mdio_init(struct rtl838x_eth_priv *priv)
 	int ret;
 
 	pr_debug("%s called\n", __func__);
-	mii_np = of_get_child_by_name(priv->pdev->dev.of_node, "mdio-bus");
+	mii_np = of_parse_phandle(priv->pdev->dev.of_node, "mdio-bus", 0);
+	if (!mii_np) /* Get legacy child nodes */
+		mii_np = of_get_child_by_name(priv->pdev->dev.of_node, "mdio-bus");
 
 	if (!mii_np) {
-		dev_err(&priv->pdev->dev, "no %s child node found", "mdio-bus");
+		dev_err(&priv->pdev->dev, "no 'mdio-bus' node found\n");
 		return -ENODEV;
 	}
 
