@@ -2476,7 +2476,6 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 	u32 poll_sel[REALTEK_PORT_ARRAY_SIZE(RTL930X_PORT_CPU, 2)] = { 0x0 };
 	u32 c45_mask = 0;
 	u32 poll_ctrl = 0;
-	u32 private_poll_mask = 0;
 	u32 v;
 	bool uses_usxgmii = false; /* For the Aquantia PHYs */
 	bool uses_hisgmii = false; /* For the RTL8221/8226 */
@@ -2517,7 +2516,6 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 		case PHY_INTERFACE_MODE_10GBASER:
 			break;			/* Serdes: Value = 0 */
 		case PHY_INTERFACE_MODE_HSGMII:
-			private_poll_mask |= RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_ALLOW(i);
 			/* fallthrough */
 		case PHY_INTERFACE_MODE_USXGMII:
 			v |= RTL930X_SMI_MAC_TYPE_CTRL_PORT(rtl930x_smi_mac_type_port_offset[i],
@@ -2525,7 +2523,6 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 			uses_usxgmii = true;
 			break;
 		case PHY_INTERFACE_MODE_QSGMII:
-			private_poll_mask |= RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_ALLOW(i);
 			v |= RTL930X_SMI_MAC_TYPE_CTRL_PORT(rtl930x_smi_mac_type_port_offset[i],
 			                                    RTL930X_SMI_MAC_TYPE_CTRL_COPPER_1000M);
 			break;
@@ -2535,8 +2532,8 @@ static int rtl930x_mdio_reset(struct mii_bus *bus)
 	}
 	sw_w32(v, RTL930X_SMI_MAC_TYPE_CTRL_REG);
 
-	/* Set the private polling mask for all Realtek PHYs (i.e. not the 10GBit Aquantia ones) */
-	sw_w32(private_poll_mask, RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_REG);
+	/* Disable 'private' polling for now, this is only useful for giga-lite (2pairs on 2G5 links) */
+	sw_w32(0x00000000, RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_REG);
 
 	/* The following magic values are found in the port configuration, they seem to
 	 * define different ways of polling a PHY. The below is for the Aquantia PHYs of
