@@ -2473,64 +2473,62 @@ static const int rtl930x_smi_mac_type_port_offset[RTL930X_PORT_CPU] = {
 static int rtl930x_mdio_reset(struct mii_bus *bus)
 {
 	struct rtl838x_eth_priv *priv = bus->priv;
-	u32 poll_sel[REALTEK_PORT_ARRAY_SIZE(RTL930X_PORT_CPU, 2)] = { 0x0 };
-	u32 c45_mask = 0;
-	u32 poll_ctrl = 0;
-	u32 v;
 	bool uses_usxgmii = false; /* For the Aquantia PHYs */
 	bool uses_hisgmii = false; /* For the RTL8221/8226 */
+	u32 v;
 
-	/* Mapping of port to phy-addresses on an SMI bus */
-	for (int port = 0; port < REALTEK_PORT_ARRAY_SIZE(priv->cpu_port, 2); port++) {
+	v = 0x0;
+	for (int port = 0; port < priv->cpu_port; port++) {
+		u32 poll;
+
 		if (priv->smi_bus[port] >= MAX_SMI_BUSSES)
 			continue;
 
+		/* Mapping of port to phy-addresses on an SMI bus */
 		sw_w32_mask(RTL930X_SMI_PORT_ADDR(port, _RTL930X_SMI_PORT_ADDR_MASK),
 		            RTL930X_SMI_PORT_ADDR(port, priv->smi_addr[port]),
 		            RTL930X_SMI_PORT_ADDR_REG(port));
 
-		poll_sel[REALTEK_PORT_ARRAY_INDEX(port, 2)] |= RTL930X_SMI_MAC_POLL_SEL(port, priv->smi_bus[port]);
-		poll_ctrl |= FIELD_PREP(RTL930X_SMI_GLB_CTRL_POLL_INTERNAL, priv->smi_bus[port]);
-	}
+		/* Configure which SMI polling mode is to be used */
+		poll = priv->smi_bus_isc45[priv->smi_bus[port]] ? RTL930X_SMI_MAC_SPOLL_SEL_C45_STD : RTL930X_SMI_MAC_SPOLL_SEL_C22_STD;
+		sw_w32_mask(RTL930X_SMI_MAC_POLL_SEL(port, _RTL930X_SMI_MAC_POLL_SEL_MASK),
+		            RTL930X_SMI_MAC_POLL_SEL(port, poll),
+		            RTL930X_SMI_MAC_POLL_SEL_REG(port));
 
-	/* Configure which SMI bus is behind which port number */
-	for (int i = 0; i < REALTEK_PORT_ARRAY_SIZE(priv->cpu_port, 2); i++)
-		sw_w32(poll_sel[i], RTL930X_SMI_MAC_POLL_SEL_REG(i));
-
-	/* Disable POLL_SEL for any SMI bus with a normal PHY (not RTL8295R for SFP+) */
-	sw_w32_mask(poll_ctrl, 0, RTL930X_SMI_GLB_CTRL_REG);
-
-	/* Configure which SMI busses are polled in c45 based on a c45 PHY being on that bus */
-	for (int i = 0; i < MAX_SMI_BUSSES; i++)
-		if (priv->smi_bus_isc45[i])
-			c45_mask |= FIELD_PREP(RTL930X_SMI_GLB_CTRL_INTF_CLAUSE_45, i);
-
-	pr_info("c45_mask: %08x\n", c45_mask);
-	sw_w32_mask(0, c45_mask, RTL930X_SMI_GLB_CTRL_REG);
-
-	/* Set the MAC type of each port according to the PHY-interface */
-	/* Values are FE: 2, GE: 3, XGE/2.5G: 0(SERDES) or 1(otherwise), SXGE: 0 */
-	v = 0;
-	for (int i = 0; i < RTL930X_PORT_CNT; i++) {
-		switch (priv->interfaces[i]) {
+		/* Set the MAC type of each port according to the PHY-interface */
+		switch (priv->interfaces[port]) {
+		case PHY_INTERFACE_MODE_1000BASEX: fallthrough;
 		case PHY_INTERFACE_MODE_10GBASER:
-			break;			/* Serdes: Value = 0 */
-		case PHY_INTERFACE_MODE_HSGMII:
-			/* fallthrough */
-		case PHY_INTERFACE_MODE_USXGMII:
-			v |= RTL930X_SMI_MAC_TYPE_CTRL_PORT(rtl930x_smi_mac_type_port_offset[i],
-			                                    RTL930X_SMI_MAC_TYPE_CTRL_COPPER_2G5_5G_10G);
-			uses_usxgmii = true;
+			v |= RTL930X_SMI_MAC_TYPE_CTRL_PORT(rtl930x_smi_mac_type_port_offset[port],
+			                                    RTL930X_SMI_MAC_TYPE_CTRL_SFP_1G_10G);
 			break;
+		case PHY_INTERFACE_MODE_HSGMII: fallthrough;
+		case PHY_INTERFACE_MODE_USXGMII:
+			v |= RTL930X_SMI_MAC_TYPE_CTRL_PORT(rtl930x_smi_mac_type_port_offset[port],
+			                                    RTL930X_SMI_MAC_TYPE_CTRL_COPPER_2G5_5G_10G);
+			break;
+		case PHY_INTERFACE_MODE_XGMII: fallthrough;
 		case PHY_INTERFACE_MODE_QSGMII:
-			v |= RTL930X_SMI_MAC_TYPE_CTRL_PORT(rtl930x_smi_mac_type_port_offset[i],
+			v |= RTL930X_SMI_MAC_TYPE_CTRL_PORT(rtl930x_smi_mac_type_port_offset[port],
 			                                    RTL930X_SMI_MAC_TYPE_CTRL_COPPER_1000M);
 			break;
 		default:
+			v |= RTL930X_SMI_MAC_TYPE_CTRL_PORT(rtl930x_smi_mac_type_port_offset[port],
+			                                    RTL930X_SMI_MAC_TYPE_CTRL_COPPER_100M);
 			break;
 		}
 	}
 	sw_w32(v, RTL930X_SMI_MAC_TYPE_CTRL_REG);
+
+	/*
+	 * Do not broadcast, keep preamble at 31 bits, and use standard
+	 * polling, set SMI interface type and clock frequency
+	 */
+	v = 0x0;
+	for (int i = 0; i < MAX_SMI_BUSSES; i++)
+		v |= (priv->smi_bus_isc45[i] ? FIELD_PREP(RTL930X_SMI_GLB_CTRL_INTF_CLAUSE_45, BIT(i)) : 0) |
+		     RTL930X_SMI_GLB_CTRL_FREQ_SEL(i, RTL930X_SMI_GLB_CTRL_FREQ_SEL_2M5Hz);
+	sw_w32(v, RTL930X_SMI_GLB_CTRL_REG);
 
 	/* Disable 'private' polling for now, this is only useful for giga-lite (2pairs on 2G5 links) */
 	sw_w32(0x00000000, RTL930X_SMI_MAC_PRIVATE_POLL_CTRL_REG);
